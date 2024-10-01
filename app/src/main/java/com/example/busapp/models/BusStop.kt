@@ -1,4 +1,10 @@
 package com.example.busapp.models
 
-class BusStop {
+data class BusStop (
+    val id: Int,
+): Identifiable {
+
+    override fun getIdentifier(): Int {
+        return id;
+    }
 }

@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.busapp.models.BusStop
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.FlowPreview
@@ -15,11 +16,11 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 @FlowPreview
 val dataAccessModule = module {
-    single<Storage<FlashCard>> {
+    single<Storage<BusStop>> {
         PersistentStorage(
             gson = get(),
-            type = object: TypeToken<List<FlashCard>>(){}.type,
-            preferenceKey = stringPreferencesKey("flashcard"),
+            type = object: TypeToken<List<BusStop>>(){}.type,
+            preferenceKey = stringPreferencesKey("busstop"),
             dataStore = androidContext().dataStore
         )
     }
