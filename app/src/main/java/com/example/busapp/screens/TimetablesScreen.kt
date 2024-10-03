@@ -1,11 +1,11 @@
 package com.example.busapp.screens
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,12 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,16 +32,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
 import com.example.busapp.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
-import java.io.FileReader
 import java.io.InputStreamReader
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ViewTimetables(
     navController: NavController
 ) {
     val context = LocalContext.current
-    readFiles(context)
+    CoroutineScope(Dispatchers.IO).launch {
+        readFiles(context)
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -137,7 +140,8 @@ fun ViewTimetables(
     }
 }
 
-fun readFiles(context: Context) {
+
+suspend fun readFiles(context: Context) = coroutineScope {
     val routes = mutableListOf<List<String?>>()
     val trips = mutableListOf<List<String?>>()
     val stopTimes = mutableListOf<List<String?>>()
@@ -194,5 +198,5 @@ fun readFiles(context: Context) {
             Log.e("Timetables Screen","Error: ${e.message}")
         }
     }
-    //println(routes)
+    println(routes)
 }
