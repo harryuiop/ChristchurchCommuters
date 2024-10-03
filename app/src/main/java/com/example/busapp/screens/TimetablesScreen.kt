@@ -1,5 +1,7 @@
 package com.example.busapp.screens
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,15 +34,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
+import com.example.busapp.R
 import java.io.BufferedReader
 import java.io.FileReader
+import java.io.InputStreamReader
 
 @Composable
 fun ViewTimetables(
     navController: NavController
 ) {
-    readFiles()
     val context = LocalContext.current
+    readFiles(context)
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,8 +128,8 @@ fun ViewTimetables(
                         //Will need to change how height is set up later
                         modifier = Modifier.width((numColumns*128).dp).height(((headerList.size)*30).dp),
                     ) {
-                        items(headerList) { Text("$it", columnHeaderModifier, fontSize = 10.sp) }
-                        items(dataList) { Text("$it", dataModifier, fontSize = 10.sp) }
+                        items(headerList) { Text(it, columnHeaderModifier, fontSize = 10.sp) }
+                        items(dataList) { Text(it, dataModifier, fontSize = 10.sp) }
                     }
                 }
             }
@@ -133,21 +137,21 @@ fun ViewTimetables(
     }
 }
 
-fun readFiles() {
+fun readFiles(context: Context) {
     var reader: BufferedReader? = null
     try {
-        reader = BufferedReader(FileReader("routes.txt"))
+        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.routes)))
         var line: String?
         while (reader.readLine().also { line = it } != null) {
             println(line)
         }
     } catch (e: Exception) {
-        println("Error: ${e.message}")
+        Log.e("Timetables Screen","Error: ${e.message}")
     } finally {
         try {
             reader?.close()
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            Log.e("Timetables Screen","Error: ${e.message}")
         }
     }
 }
