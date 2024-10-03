@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Button
@@ -93,19 +96,36 @@ fun ViewTimetables(
         }
 
         //TODO: Get the data from the stop_times/trips/stops files
-        val itemsList = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)", "a","a","a","a","a","a","a","a","a","a")
+        val headerList = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
+        val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
 
-        val itemModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(2.dp)
+        val columnHeaderModifier = Modifier.border(1.dp, Color.Black).height(80.dp).wrapContentSize().padding(4.dp)
+        val dataModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(4.dp)
 
         //TODO: Change value in here to num stops in route
-        val numRows = 19
-        item{
-            LazyHorizontalGrid(
-                rows = GridCells.Fixed(numRows),
-                modifier = Modifier.height((numRows*30).dp),
-            ) {
-                items(itemsList) { Text("$it", itemModifier, fontSize = 10.sp) }
+        val numColumns = 9
+        item {
+            LazyRow {
+                item {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(numColumns),
+                        modifier = Modifier.width((numColumns*128).dp).height((headerList.size*30).dp),
+                    ) {
+                        items(headerList) { Text("$it", columnHeaderModifier, fontSize = 10.sp) }
+                        items(dataList) { Text("$it", dataModifier, fontSize = 10.sp) }
+                    }
+                }
             }
+        }
+        item {
+//            LazyVerticalGrid(
+//                columns = GridCells.Fixed(numColumns),
+//                modifier = Modifier.width((numColumns*128).dp).height((itemsList.size*30).dp),
+//            ) {
+//                items(itemsList) { Text("$it", itemModifier, fontSize = 10.sp) }
+//            }
+
+
         }
     }
 }
