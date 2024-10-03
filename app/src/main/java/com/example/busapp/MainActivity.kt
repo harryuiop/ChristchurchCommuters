@@ -1,5 +1,6 @@
 package com.example.busapp
 
+import RouteFinder
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -71,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                 //ViewTimetables(navController = navController)
                             }
                             composable("RouteFinder") {
-                                //FindRoute(navController = navController)
+                                RouteFinder(navController = navController)
                             }
                             composable("AddStop") {
                                 //AddBusStop(navController = navController)
