@@ -1,4 +1,5 @@
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -9,8 +10,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -34,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import java.text.SimpleDateFormat
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +77,9 @@ fun RouteFinder(navController: NavController) {
 
 
         Row(
-            modifier = Modifier.align(alignment = Alignment.CenterHorizontally).padding(horizontal = 20.dp)
+            modifier = Modifier
+                .align(alignment = Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp)
         ) {
             OutlinedButton(
                 onClick = { showDialog = true },
@@ -113,7 +122,9 @@ fun RouteFinder(navController: NavController) {
             item {
                 Text(
                     text = "1",
-                    modifier = Modifier.fillMaxWidth().background(Color.White),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White),
                     color = Color.Black
                 )
             }
@@ -152,7 +163,6 @@ fun AdvancedTimePickerDialog(
     title: String = "Select Time",
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     Dialog(
@@ -183,12 +193,45 @@ fun AdvancedTimePickerDialog(
                     style = MaterialTheme.typography.labelMedium
                 )
                 content()
+
+                Row(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = { /*TODO*/ },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+                    }
+
+                    val calendar = Calendar.getInstance()
+                    val dateFormat = SimpleDateFormat("d MMMM")
+                    var selectedDay = dateFormat.format(calendar.time)
+
+                    Text(
+                        text = selectedDay,
+                        modifier = Modifier.weight(2f).wrapContentWidth(Alignment.CenterHorizontally)
+                    )
+
+                    OutlinedButton(
+                        onClick = { /*TODO*/ },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "")
+                    }
+                }
+
+                Spacer(modifier = Modifier.size(24.dp))
+
                 Row(
                     modifier = Modifier
                         .height(40.dp)
                         .fillMaxWidth()
                 ) {
-                    toggle()
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     TextButton(onClick = onConfirm) { Text("OK") }
