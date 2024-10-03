@@ -138,12 +138,18 @@ fun ViewTimetables(
 }
 
 fun readFiles(context: Context) {
+    val routes = mutableListOf<List<String?>>()
     var reader: BufferedReader? = null
     try {
         reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.routes)))
         var line: String?
+        var counter = 0
         while (reader.readLine().also { line = it } != null) {
-            println(line)
+            if (counter > 0) {
+                val listline = line?.split(",")
+                routes.add(listOf(listline?.get(0), listline?.get(2), listline?.get(3)))
+            }
+            counter++
         }
     } catch (e: Exception) {
         Log.e("Timetables Screen","Error: ${e.message}")
@@ -154,4 +160,5 @@ fun readFiles(context: Context) {
             Log.e("Timetables Screen","Error: ${e.message}")
         }
     }
+    println(routes)
 }
