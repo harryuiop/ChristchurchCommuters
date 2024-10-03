@@ -95,11 +95,20 @@ fun ViewTimetables(
             }
         }
 
+        //From routes.txt: Get route_id, route_short_name, route_long_name
+        //  - display route_short_name/route_long_name at the top of page
+        //From trips.csv: Get trip_id. direction_id
+        // - use direction_id to know which direction bus is, use in View Other Direction button
+        //From stop_times.csv: For trip_id get all stop_id's, arrival_time/departure_time
+        //  - display the arrival_time/departure_time in the table
+        //From stops.txt: For stop_id get stop_name
+        // - display the stop_name as the column headers
+
         //TODO: Get the data from the stop_times/trips/stops files
         val headerList = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
         val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
 
-        val columnHeaderModifier = Modifier.border(1.dp, Color.Black).height(80.dp).wrapContentSize().padding(4.dp)
+        val columnHeaderModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(4.dp)
         val dataModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(4.dp)
 
         //TODO: Change value in here to num stops in route
@@ -109,23 +118,14 @@ fun ViewTimetables(
                 item {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(numColumns),
-                        modifier = Modifier.width((numColumns*128).dp).height((headerList.size*30).dp),
+                        //Will need to change how height is set up later
+                        modifier = Modifier.width((numColumns*128).dp).height(((headerList.size)*30).dp),
                     ) {
                         items(headerList) { Text("$it", columnHeaderModifier, fontSize = 10.sp) }
                         items(dataList) { Text("$it", dataModifier, fontSize = 10.sp) }
                     }
                 }
             }
-        }
-        item {
-//            LazyVerticalGrid(
-//                columns = GridCells.Fixed(numColumns),
-//                modifier = Modifier.width((numColumns*128).dp).height((itemsList.size*30).dp),
-//            ) {
-//                items(itemsList) { Text("$it", itemModifier, fontSize = 10.sp) }
-//            }
-
-
         }
     }
 }
