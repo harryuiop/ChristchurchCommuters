@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
 import com.example.busapp.R
+import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -42,12 +45,12 @@ import java.io.InputStreamReader
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ViewTimetables(
-    navController: NavController
+    navController: NavController,
+    timetableViewModel: TimetableViewModel
 ) {
-    val context = LocalContext.current
-    CoroutineScope(Dispatchers.IO).launch {
-        readFiles(context)
-    }
+    val routes: List<List<String?>> by timetableViewModel.routes.collectAsState()
+    println("timetable screen")
+    println(routes)
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,8 +121,14 @@ fun ViewTimetables(
         val headerList = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
         val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
 
-        val columnHeaderModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(4.dp)
-        val dataModifier = Modifier.border(1.dp, Color.Black).wrapContentSize().padding(4.dp)
+        val columnHeaderModifier = Modifier
+            .border(1.dp, Color.Black)
+            .wrapContentSize()
+            .padding(4.dp)
+        val dataModifier = Modifier
+            .border(1.dp, Color.Black)
+            .wrapContentSize()
+            .padding(4.dp)
 
         //TODO: Change value in here to num stops in route
         val numColumns = 9
@@ -129,7 +138,9 @@ fun ViewTimetables(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(numColumns),
                         //Will need to change how height is set up later
-                        modifier = Modifier.width((numColumns*128).dp).height(((headerList.size)*30).dp),
+                        modifier = Modifier
+                            .width((numColumns * 128).dp)
+                            .height(((headerList.size) * 30).dp),
                     ) {
                         items(headerList) { Text(it, columnHeaderModifier, fontSize = 10.sp) }
                         items(dataList) { Text(it, dataModifier, fontSize = 10.sp) }
@@ -138,65 +149,4 @@ fun ViewTimetables(
             }
         }
     }
-}
-
-
-suspend fun readFiles(context: Context) = coroutineScope {
-    val routes = mutableListOf<List<String?>>()
-    val trips = mutableListOf<List<String?>>()
-    val stopTimes = mutableListOf<List<String?>>()
-    val stops = mutableListOf<List<String?>>()
-    var reader: BufferedReader? = null
-    try {
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.routes)))
-        var line: String?
-        var counter = 0
-        while (reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding route_id, route_short_name, route_long_name
-                routes.add(listOf(listLine?.get(0), listLine?.get(2), listLine?.get(3)))
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.trips)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding route_id, trip_id, direction_id
-                trips.add(listOf(listLine?.get(0), listLine?.get(2), listLine?.get(5)))
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.stop_times)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding trip_id, arrival_time, stop_id
-                stopTimes.add(listOf(listLine?.get(0), listLine?.get(1), listLine?.get(3)))
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.stops)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding stop_id, stop_name
-                stops.add(listOf(listLine?.get(0), listLine?.get(2)))
-            }
-            counter++
-        }
-    } catch (e: Exception) {
-        Log.e("Timetables Screen","Error: ${e.message}")
-    } finally {
-        try {
-            reader?.close()
-        } catch (e: Exception) {
-            Log.e("Timetables Screen","Error: ${e.message}")
-        }
-    }
-    println(routes)
 }
