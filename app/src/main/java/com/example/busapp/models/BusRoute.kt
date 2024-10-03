@@ -1,8 +1,8 @@
 package com.example.busapp.models
 
-data class BusStop (
+class BusRoute (
     val id: Int,
-    val name: String
+    val name: String,
 ): Identifiable {
 
     override fun getIdentifier(): Int {
