@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.busapp.screens.ViewTimetables
 import com.example.busapp.ui.theme.BusAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -68,7 +69,7 @@ class MainActivity : ComponentActivity() {
                                 Home(navController = navController)
                             }
                             composable("Timetables") {
-                                //ViewTimetables(navController = navController)
+                                ViewTimetables(navController = navController)
                             }
                             composable("RouteFinder") {
                                 //FindRoute(navController = navController)
