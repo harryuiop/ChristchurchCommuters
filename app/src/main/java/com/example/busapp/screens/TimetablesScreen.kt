@@ -32,11 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
+import java.io.BufferedReader
+import java.io.FileReader
 
 @Composable
 fun ViewTimetables(
     navController: NavController
 ) {
+    readFiles()
     val context = LocalContext.current
     LazyColumn(
         modifier = Modifier
@@ -126,6 +129,25 @@ fun ViewTimetables(
                     }
                 }
             }
+        }
+    }
+}
+
+fun readFiles() {
+    var reader: BufferedReader? = null
+    try {
+        reader = BufferedReader(FileReader("routes.txt"))
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            println(line)
+        }
+    } catch (e: Exception) {
+        println("Error: ${e.message}")
+    } finally {
+        try {
+            reader?.close()
+        } catch (e: Exception) {
+            println("Error: ${e.message}")
         }
     }
 }
