@@ -2,7 +2,7 @@ package com.example.busapp.models
 
 data class FileData(
     val routes: List<List<String?>>,
-    val tripsPerRoute: HashMap<String?, MutableList<String?>>,
-    val stopTimesPerTrip: HashMap<String?, MutableList<Pair<String?, String?>>>,
-    val stopNamesPerTrip: HashMap<String?, MutableList<String?>>
+    val tripsPerRoute: Map<String?, MutableList<String?>>,
+    val stopTimesPerTrip: Map<String?, MutableList<Pair<String?, String?>>>,
+    val stopNamesPerTrip: Map<String?, MutableList<String?>>
 )

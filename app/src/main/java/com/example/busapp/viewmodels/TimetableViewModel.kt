@@ -9,19 +9,21 @@ class TimetableViewModel() : ViewModel() {
     private val _routes = MutableStateFlow<List<List<String?>>>(emptyList())
     val routes: StateFlow<List<List<String?>>> get() = _routes
 
-    private val _trips = MutableStateFlow<List<List<String?>>>(emptyList())
-    val trips: StateFlow<List<List<String?>>> get() = _trips
+    private val _tripsPerRoute = MutableStateFlow<Map<String?, MutableList<String?>>>(emptyMap())
+    val tripsPerRoute: StateFlow<Map<String?, MutableList<String?>>> get() = _tripsPerRoute
 
-    private val _stopTimes = MutableStateFlow<List<List<String?>>>(emptyList())
-    val stopTimes: StateFlow<List<List<String?>>> get() = _stopTimes
+    private val _stopTimesPerTrip = MutableStateFlow<Map<String?, MutableList<Pair<String?, String?>>>>(
+        emptyMap())
+    val stopTimesPerTrip: StateFlow<Map<String?, MutableList<Pair<String?, String?>>>> get() = _stopTimesPerTrip
 
-    private val _stops = MutableStateFlow<List<List<String?>>>(emptyList())
-    val stops: StateFlow<List<List<String?>>> get() = _stops
+    private val _stopNamesPerTrip = MutableStateFlow<Map<String?, MutableList<String?>>>(
+        emptyMap())
+    val stopNamesPerTrip: StateFlow<Map<String?, MutableList<String?>>> get() = _stopNamesPerTrip
 
     fun setData(fileData: FileData) {
         _routes.value = fileData.routes
-        _trips.value = fileData.trips
-        _stopTimes.value = fileData.stopTimes
-        _stops.value = fileData.stops
+        _tripsPerRoute.value = fileData.tripsPerRoute
+        _stopTimesPerTrip.value = fileData.stopTimesPerTrip
+        _stopNamesPerTrip.value = fileData.stopNamesPerTrip
     }
 }
