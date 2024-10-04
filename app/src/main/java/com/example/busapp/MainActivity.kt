@@ -193,12 +193,12 @@ suspend fun readFiles(context: Context) = coroutineScope {
                 //Adding trip_id, arrival_time, stop_id
                 //Only stop times with timepoint = 1 are displayed on metro website
                 if (listLine?.get(9) == "1") {
-                    val tripId = listLine?.get(0)
+                    val tripId = listLine[0]
                     if (!stopTimesPerTrip.containsKey(tripId)) {
-                        stopTimesPerTrip[tripId] = mutableListOf(Pair(listLine?.get(1), listLine?.get(3)))
+                        stopTimesPerTrip[tripId] = mutableListOf(Pair(listLine[1], listLine[3]))
                     } else {
                         val currentList = stopTimesPerTrip[tripId]
-                        currentList?.add(Pair(listLine?.get(1), listLine?.get(3)))
+                        currentList?.add(Pair(listLine[1], listLine[3]))
                         if (currentList != null) {
                             stopTimesPerTrip[tripId] = currentList
                         }
