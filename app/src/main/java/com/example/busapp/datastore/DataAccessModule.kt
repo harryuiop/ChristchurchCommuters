@@ -28,14 +28,14 @@ val dataAccessModule = module {
             dataStore = androidContext().dataStore
         )
     }
-    single<Storage<BusRoute>> {
-        PersistentStorage(
-            gson = get(),
-            type = object: TypeToken<List<BusRoute>>(){}.type,
-            preferenceKey = stringPreferencesKey("busroute"),
-            dataStore = androidContext().dataStore
-        )
-    }
+//    single<Storage<BusRoute>> {
+//        PersistentStorage(
+//            gson = get(),
+//            type = object: TypeToken<List<BusRoute>>(){}.type,
+//            preferenceKey = stringPreferencesKey("busroute"),
+//            dataStore = androidContext().dataStore
+//        )
+//    }
 
     single { Gson() }
 

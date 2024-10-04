@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                                 //FindRoute(navController = navController)
                             }
                             composable("AddStop") {
-                                AddBusStop(navController = navController, addBusStopViewModel = addBusStopViewModel)
+                                AddBusStop(addBusStopViewModel = addBusStopViewModel, navController = navController)
                             }
                         }
                     }
