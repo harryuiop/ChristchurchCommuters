@@ -149,9 +149,10 @@ fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
 
 suspend fun readFiles(context: Context) = coroutineScope {
     val routes = mutableListOf<List<String?>>()
-    val trips = mutableListOf<List<String?>>()
-    val stopTimes = mutableListOf<List<String?>>()
-    val stops = mutableListOf<List<String?>>()
+    val stopTimesPerTrip = HashMap<String?, MutableList<Pair<String?, String?>>>()
+    val stopsHashMap = HashMap<String?, String?>()
+
+    val tripsPerRoute = HashMap<String?, MutableList<String?>>()
     var reader: BufferedReader? = null
     try {
         reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.routes)))
@@ -171,7 +172,16 @@ suspend fun readFiles(context: Context) = coroutineScope {
             if (counter > 0) {
                 val listLine = line?.split(",")
                 //Adding route_id, trip_id, direction_id
-                trips.add(listOf(listLine?.get(0), listLine?.get(2), listLine?.get(5)))
+                val tripId = listLine?.get(0)
+                if (!tripsPerRoute.containsKey(tripId)) {
+                    tripsPerRoute[tripId] = mutableListOf(listLine?.get(2))
+                } else {
+                    val currentList = tripsPerRoute[tripId]
+                    currentList?.add(listLine?.get(2))
+                    if (currentList != null) {
+                        tripsPerRoute[tripId] = currentList
+                    }
+                }
             }
             counter++
         }
@@ -181,7 +191,19 @@ suspend fun readFiles(context: Context) = coroutineScope {
             if (counter > 0) {
                 val listLine = line?.split(",")
                 //Adding trip_id, arrival_time, stop_id
-                stopTimes.add(listOf(listLine?.get(0), listLine?.get(1), listLine?.get(3)))
+                //Only stop times with timepoint = 1 are displayed on metro website
+                if (listLine?.get(9) == "1") {
+                    val tripId = listLine?.get(0)
+                    if (!stopTimesPerTrip.containsKey(tripId)) {
+                        stopTimesPerTrip[tripId] = mutableListOf(Pair(listLine?.get(1), listLine?.get(3)))
+                    } else {
+                        val currentList = stopTimesPerTrip[tripId]
+                        currentList?.add(Pair(listLine?.get(1), listLine?.get(3)))
+                        if (currentList != null) {
+                            stopTimesPerTrip[tripId] = currentList
+                        }
+                    }
+                }
             }
             counter++
         }
@@ -191,7 +213,7 @@ suspend fun readFiles(context: Context) = coroutineScope {
             if (counter > 0) {
                 val listLine = line?.split(",")
                 //Adding stop_id, stop_name
-                stops.add(listOf(listLine?.get(0), listLine?.get(2)))
+                stopsHashMap[listLine?.get(0)] = listLine?.get(2)
             }
             counter++
         }
@@ -204,7 +226,17 @@ suspend fun readFiles(context: Context) = coroutineScope {
             Log.e("Reading Metro Files","Error: ${e.message}")
         }
     }
+    val stopNamesPerTrip = HashMap<String?, MutableList<String?>>()
+    stopTimesPerTrip.forEach { (key, value) ->
+        val stopNamesList = mutableListOf<String?>()
+        value.forEach { stopNamePair ->
+            stopNamesList.add(stopsHashMap[stopNamePair.second])
+        }
+        stopNamesPerTrip[key] = stopNamesList
+    }
+
     println("coroutine")
-    println(routes)
-    return@coroutineScope FileData(routes, trips, stopTimes, stops)
+    println(tripsPerRoute)
+
+    return@coroutineScope FileData(routes, tripsPerRoute, stopTimesPerTrip, stopNamesPerTrip)
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -80,22 +81,25 @@ fun ViewTimetables(
                 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
+                    onExpandedChange = { expanded = !expanded },
                 ) {
                     TextField(
                         value = selectedRouteName,
-                        placeholder = { Text("Select Bus") },
+                        placeholder = { Text("Select Bus Service") },
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor()
                     )
-                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
                         routes.forEach { route ->
                             DropdownMenuItem(
-                                text = { route[2]?.let { Text(text = it) } },
+                                text = { Text(text = route[1].toString() + " - " + route[2].toString()) },
                                 onClick = {
-                                    selectedRouteName = route[2].toString()
+                                    selectedRouteName = route[1].toString() + " - " + route[2].toString()
                                     selectedRouteId = route[0].toString()
                                     expanded = false
                                 })
