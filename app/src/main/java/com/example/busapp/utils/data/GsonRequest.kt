@@ -1,4 +1,4 @@
-package com.example.busapp.utils
+package com.example.busapp.utils.data
 
 class GsonRequest {
 }
