@@ -27,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,15 +47,17 @@ fun ViewTimetables(
     navController: NavController,
     timetableViewModel: TimetableViewModel
 ) {
-    val routes: List<List<String?>> by timetableViewModel.routes.collectAsState()
-    val tripsPerRoute: Map<String?, MutableList<String?>> by timetableViewModel.tripsPerRoute.collectAsState()
-    val stopTimesPerRoute: Map<String?, MutableList<Pair<String?, String?>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
-    val stopNames: Map<String?, MutableList<String?>> by timetableViewModel.stopNamesPerTrip.collectAsState()
+    val routes: List<List<String>> by timetableViewModel.routes.collectAsState()
+    val tripsPerRoute: Map<String, MutableList<String>> by timetableViewModel.tripsPerRoute.collectAsState()
+    val stopTimesPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
+    val stopNamesPerRoute: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
     println("timetable screen")
-    println(routes)
+    println(stopNamesPerRoute)
     var expanded by remember { mutableStateOf(false) }
     var selectedRouteName by remember { mutableStateOf("")}
     var selectedRouteId by remember { mutableStateOf("") }
+    var selectedDay by remember { mutableStateOf("") }
+    var headerList by remember { mutableStateOf(mutableListOf<String>()) }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -86,10 +89,12 @@ fun ViewTimetables(
                     ) {
                         routes.forEach { route ->
                             DropdownMenuItem(
-                                text = { Text(text = route[1].toString() + " - " + route[2].toString()) },
+                                text = { Text(text = route[1] + " - " + route[2]) },
                                 onClick = {
-                                    selectedRouteName = route[1].toString() + " - " + route[2].toString()
-                                    selectedRouteId = route[0].toString()
+                                    selectedRouteName = route[1] + " - " + route[2]
+                                    selectedRouteId = route[0]
+                                    //TODO: Get weekday trip_id when file has been uploaded
+                                    headerList = stopNamesPerRoute[route[0]]!!
                                     expanded = false
                                 })
                         }
@@ -111,17 +116,17 @@ fun ViewTimetables(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Button(
-                        onClick = {}
+                        onClick = { selectedDay = "Weekday" }
                     ) {
                         Text("Weekday")
                     }
                     Button(
-                        onClick = {}
+                        onClick = { selectedDay = "Saturday" }
                     ) {
                         Text("Saturday")
                     }
                     Button(
-                        onClick = {}
+                        onClick = { selectedDay = "Sunday" }
                     ) {
                         Text("Sunday")
                     }
@@ -142,7 +147,8 @@ fun ViewTimetables(
         // - display the stop_name as the column headers
 
         //TODO: Get the data from the stop_times/trips/stops files
-        val headerList = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
+        //val headerList = stopNamesPerRoute[selectedRouteId]
+        val headerList2 = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
         val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
 
         val columnHeaderModifier = Modifier
@@ -159,14 +165,17 @@ fun ViewTimetables(
         item {
             LazyRow {
                 item {
+                    val size = headerList.size
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(numColumns),
                         //Will need to change how height is set up later
                         modifier = Modifier
                             .width((numColumns * 128).dp)
-                            .height(((headerList.size) * 30).dp),
+                            .height(((size) * 30).dp),
                     ) {
-                        items(headerList) { Text(it, columnHeaderModifier, fontSize = 10.sp) }
+                        items(headerList) {
+                            Text(it, columnHeaderModifier, fontSize = 10.sp)
+                        }
                         items(dataList) { Text(it, dataModifier, fontSize = 10.sp) }
                     }
                 }
