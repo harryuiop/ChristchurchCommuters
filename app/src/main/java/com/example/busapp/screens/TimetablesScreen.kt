@@ -22,10 +22,17 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,9 +48,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ViewTimetables(
@@ -53,6 +62,9 @@ fun ViewTimetables(
     val routes: List<List<String?>> by timetableViewModel.routes.collectAsState()
     println("timetable screen")
     println(routes)
+    var expanded by remember { mutableStateOf(false) }
+    var selectedRouteName by remember { mutableStateOf("")}
+    var selectedRouteId by remember { mutableStateOf("") }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,22 +77,33 @@ fun ViewTimetables(
                 Text(text = "Timetables", fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
                 Spacer(modifier = Modifier.size(20.dp))
-
-                DropdownMenu(expanded = false, onDismissRequest = { /*TODO*/ }) {
-                    routes.forEach { route ->
-                        DropdownMenuItem(text = { route[2] }, onClick = { /*TODO*/ })
+                
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    TextField(
+                        value = selectedRouteName,
+                        placeholder = { Text("Select Bus") },
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.menuAnchor()
+                    )
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        routes.forEach { route ->
+                            DropdownMenuItem(
+                                text = { route[2]?.let { Text(text = it) } },
+                                onClick = {
+                                    selectedRouteName = route[2].toString()
+                                    selectedRouteId = route[0].toString()
+                                    expanded = false
+                                })
+                        }
                     }
                 }
 
-                Button(
-                    onClick = {}
-                ) {
-                    Text("Search Bus", fontStyle = FontStyle.Italic)
-                }
-
                 Spacer(modifier = Modifier.size(20.dp))
-
-                Text(text = "No Bus Selected", fontSize = 20.sp)
 
                 Button(
                     onClick = {}
