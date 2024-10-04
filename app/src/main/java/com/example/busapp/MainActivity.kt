@@ -33,14 +33,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.ui.theme.BusAppTheme
+import com.example.busapp.viewmodels.RouteFinderViewmodel
 
 class MainActivity : ComponentActivity() {
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +65,8 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Box(modifier = Modifier.padding(it)) {
+                        val routeFinderViewmodel: RouteFinderViewmodel = viewModel()
+
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
                                 Home(navController = navController)
@@ -72,7 +75,7 @@ class MainActivity : ComponentActivity() {
                                 //ViewTimetables(navController = navController)
                             }
                             composable("RouteFinder") {
-                                RouteFinder(navController = navController)
+                                RouteFinder(navController = navController, routeFinderViewmodel)
                             }
                             composable("AddStop") {
                                 //AddBusStop(navController = navController)
@@ -87,7 +90,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
     Column (
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Christchurch Commuters", fontSize = 24.sp)
@@ -110,7 +115,9 @@ fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
 
         Button(
             onClick = { navController.navigate("AddStop") },
-            modifier = Modifier.fillMaxWidth().border(8.dp, Color.White, shape = RectangleShape),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(8.dp, Color.White, shape = RectangleShape),
             colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
         ) {
             Text("Add Bus Stop")

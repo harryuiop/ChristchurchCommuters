@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -34,18 +33,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.example.busapp.viewmodels.RouteFinderViewmodel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RouteFinder(navController: NavController) {
+fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderViewmodel) {
     var checked by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -60,16 +59,16 @@ fun RouteFinder(navController: NavController) {
         Spacer(modifier = Modifier.size(24.dp))
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = routeFinderViewmodel.startLocation,
+            onValueChange = { routeFinderViewmodel.updateStartLocation(it) },
             label = { Text("Choose start location") }
         )
 
         Spacer(modifier = Modifier.size(12.dp))
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = routeFinderViewmodel.destination,
+            onValueChange = { routeFinderViewmodel.updateDestination(it) },
             label = { Text("Choose destination") }
         )
 
@@ -116,19 +115,6 @@ fun RouteFinder(navController: NavController) {
         Spacer(modifier = Modifier.size(24.dp))
 
         Text(text = "Upcoming", fontSize = 12.sp)
-
-        LazyColumn(
-        ) {
-            item {
-                Text(
-                    text = "1",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White),
-                    color = Color.Black
-                )
-            }
-        }
     }
 }
 
@@ -210,7 +196,7 @@ fun AdvancedTimePickerDialog(
 
                     val calendar = Calendar.getInstance()
                     val dateFormat = SimpleDateFormat("d MMMM")
-                    var selectedDay = dateFormat.format(calendar.time)
+                    val selectedDay = dateFormat.format(calendar.time)
 
                     Text(
                         text = selectedDay,
