@@ -5,12 +5,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.busapp.models.BusRoute
 import com.example.busapp.models.BusStop
+import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.FlowPreview
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "bus_data")
@@ -35,5 +38,9 @@ val dataAccessModule = module {
     }
 
     single { Gson() }
+
+    viewModel{
+        AddBusStopViewModel()
+    }
 
 }
