@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,6 +65,12 @@ fun ViewTimetables(
                 Text(text = "Timetables", fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
                 Spacer(modifier = Modifier.size(20.dp))
+
+                DropdownMenu(expanded = false, onDismissRequest = { /*TODO*/ }) {
+                    routes.forEach { route ->
+                        DropdownMenuItem(text = { route[2] }, onClick = { /*TODO*/ })
+                    }
+                }
 
                 Button(
                     onClick = {}
