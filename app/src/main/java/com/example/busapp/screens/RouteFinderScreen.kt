@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -14,7 +15,10 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -33,18 +37,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.busapp.viewmodels.RouteFinderViewModel
+import com.google.android.libraries.places.api.model.AutocompletePrediction
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderViewModel) {
+fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
     var checked by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -58,25 +65,13 @@ fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderV
 
         Spacer(modifier = Modifier.size(24.dp))
 
-        OutlinedTextField(
-            value = routeFinderViewmodel.startLocation,
-            onValueChange = {
-                routeFinderViewmodel.updateStartLocation(it)
-                routeFinderViewmodel.findAutocompletePredictions(it)
-            },
-            label = { Text("Choose start location") }
-        )
+        LocationSelector(routeFinderViewModel, isStartLocation = true)
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        OutlinedTextField(
-            value = routeFinderViewmodel.destination,
-            onValueChange = { routeFinderViewmodel.updateDestination(it) },
-            label = { Text("Choose destination") }
-        )
+        LocationSelector(routeFinderViewModel, isStartLocation = false)
 
         Spacer(modifier = Modifier.size(12.dp))
-
 
         Row(
             modifier = Modifier
@@ -106,18 +101,86 @@ fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderV
 
         if (showDialog) {
             AdvancedTimePicker(
-                onConfirm = {
-                    showDialog = false
-                },
-                onDismiss = {
-                    showDialog = false
-                }
+                onConfirm = { showDialog = false },
+                onDismiss = { showDialog = false }
             )
         }
 
         Spacer(modifier = Modifier.size(24.dp))
 
         Text(text = "Upcoming", fontSize = 12.sp)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocationSelector(routeFinderViewModel: RouteFinderViewModel, isStartLocation: Boolean) {
+    var expanded by remember { mutableStateOf(false) }
+    var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+    ) {
+        val currentLocation = if (isStartLocation) {
+            routeFinderViewModel.startLocation
+        } else {
+            routeFinderViewModel.destination
+        }
+
+        OutlinedTextField(
+            value = TextFieldValue(currentLocation, selection = TextRange(currentLocation.length)),
+            onValueChange = {
+                if (isStartLocation) {
+                    routeFinderViewModel.updateStartLocation(it.text)
+                } else {
+                    routeFinderViewModel.updateDestination(it.text)
+                }
+
+                routeFinderViewModel.findAutocompletePredictions(it.text) { result ->
+
+                    predictions = if (it.text.isEmpty()) {
+                        emptyList()
+                    } else { result }
+
+                    expanded = result.isNotEmpty() && it.text.isNotEmpty()
+                }
+            },
+            modifier = Modifier
+                .menuAnchor(),
+            label = {
+                if (isStartLocation) {
+                    Text("Choose start location")
+                } else {
+                    Text("Choose destination")
+                }
+            },
+            singleLine = true
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 150.dp)
+        ) {
+            predictions.forEach { prediction ->
+                val predictionText = prediction.getPrimaryText(null).toString()
+
+                DropdownMenuItem(
+                    text = { Text(predictionText, style = MaterialTheme.typography.bodyLarge) },
+                    onClick = {
+                        if (isStartLocation) {
+                            routeFinderViewModel.updateStartLocation(predictionText)
+                        } else {
+                            routeFinderViewModel.updateDestination(predictionText)
+                        }
+
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
     }
 }
 
@@ -203,7 +266,9 @@ fun AdvancedTimePickerDialog(
 
                     Text(
                         text = selectedDay,
-                        modifier = Modifier.weight(2f).wrapContentWidth(Alignment.CenterHorizontally)
+                        modifier = Modifier
+                            .weight(2f)
+                            .wrapContentWidth(Alignment.CenterHorizontally)
                     )
 
                     OutlinedButton(

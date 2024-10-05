@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.busapp.places.PlacesRepository
+import com.google.android.libraries.places.api.model.AutocompletePrediction
 
 class RouteFinderViewModel(
     private val placesRepository: PlacesRepository
@@ -23,7 +24,7 @@ class RouteFinderViewModel(
         destination = newDestination
     }
 
-    fun findAutocompletePredictions(newQuery: String) {
-        placesRepository.findAutocompletePredictions(newQuery)
+    fun findAutocompletePredictions(newQuery: String, onResult: (List<AutocompletePrediction>) -> Unit) {
+        placesRepository.findAutocompletePredictions(newQuery, onResult)
     }
 }
