@@ -1,13 +1,17 @@
 package com.example.busapp
 
 import RouteFinder
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -25,9 +29,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.FileData
+import com.example.busapp.models.GtfsRealtimeFeed
+import com.example.busapp.models.TripUpdate
 import com.example.busapp.screens.ViewTimetables
 import com.example.busapp.services.MetroApiService
 import com.example.busapp.ui.theme.BusAppTheme
+import com.example.busapp.viewmodels.GtfsRealTimeViewModel
 import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,13 +53,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             val timetableViewModel: TimetableViewModel = viewModel()
+            val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
+
             CoroutineScope(Dispatchers.IO).launch {
                 val fileData = readFiles(this@MainActivity)
                 timetableViewModel.setData(fileData)
             }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                val lifeData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                gftsRealTimeViewModel.setData(lifeData)
+            }
+
             BusAppTheme {
                 val navController = rememberNavController()
                 Scaffold(
@@ -73,7 +87,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, metroApiService = metroApiService, lifecycleScope = lifecycleScope)
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope)
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -92,8 +106,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun Home(navController: NavController, metroApiService: MetroApiService, lifecycleScope: kotlinx.coroutines.CoroutineScope) {
+fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel, metroApiService: MetroApiService, lifecycleScope: kotlinx.coroutines.CoroutineScope) {
+    var refreshedData by remember { mutableStateOf(emptyList<TripUpdate>()) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -106,8 +123,26 @@ fun Home(navController: NavController, metroApiService: MetroApiService, lifecyc
 
         Text(text = "Upcoming", fontSize = 12.sp)
 
-        LazyColumn {
-            // Your existing LazyColumn content
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            items(refreshedData) { tripUpdate ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Trip ID: ${tripUpdate.tripId}")
+                        Text("Route ID: ${tripUpdate.routeId}")
+                        Text("Schedule: ${tripUpdate.scheduleRelationship}")
+                        Text("Stops: ${tripUpdate.stopTimeUpdates.size}")
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.size(12.dp))
@@ -141,7 +176,9 @@ fun Home(navController: NavController, metroApiService: MetroApiService, lifecyc
         Row {
             Button(onClick = {
                 lifecycleScope.launch {
-                    metroApiService.getRealTimeData()
+                    val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                    gftsRealTimeViewModel.setData(liveData)
+                    refreshedData = liveData.tripUpdates
                 }
             }) {
                 Text(text = "Refresh Data")
@@ -149,8 +186,6 @@ fun Home(navController: NavController, metroApiService: MetroApiService, lifecyc
         }
 
         Spacer(modifier = Modifier.size(12.dp))
-
-        Text(text = apiResult)
     }
 }
 

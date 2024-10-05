@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -87,5 +90,4 @@ dependencies {
     implementation("com.google.transit:gtfs-realtime-bindings:0.0.4")
     implementation("com.google.protobuf:protobuf-java:3.19.4")
     implementation(libs.kotlinx.coroutines.android)
-
 }
