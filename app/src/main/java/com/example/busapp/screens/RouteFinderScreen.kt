@@ -38,13 +38,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
-import com.example.busapp.viewmodels.RouteFinderViewmodel
+import com.example.busapp.viewmodels.RouteFinderViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderViewmodel) {
+fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderViewModel) {
     var checked by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -60,7 +60,10 @@ fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderV
 
         OutlinedTextField(
             value = routeFinderViewmodel.startLocation,
-            onValueChange = { routeFinderViewmodel.updateStartLocation(it) },
+            onValueChange = {
+                routeFinderViewmodel.updateStartLocation(it)
+                routeFinderViewmodel.findAutocompletePredictions(it)
+            },
             label = { Text("Choose start location") }
         )
 
@@ -84,7 +87,7 @@ fun RouteFinder(navController: NavController, routeFinderViewmodel: RouteFinderV
                 onClick = { showDialog = true },
                 modifier = Modifier.padding(end = 12.dp)
             ) {
-                var timeOptionMsg = if (checked) {
+                val timeOptionMsg = if (checked) {
                     "Arrive by"
                 } else {
                     "Leave by"

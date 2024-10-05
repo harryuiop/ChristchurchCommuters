@@ -2,7 +2,6 @@ package com.example.busapp
 
 import RouteFinder
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,40 +32,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.ui.theme.BusAppTheme
-import com.example.busapp.viewmodels.RouteFinderViewmodel
-import com.google.android.libraries.places.api.Places
+import com.example.busapp.viewmodels.RouteFinderViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+    private val routeFinderViewModel: RouteFinderViewModel by viewModel()
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        // Define a variable to hold the Places API key.
-        val apiKey = BuildConfig.PLACES_API_KEY
-
-        // Log an error if apiKey is not set.
-        if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
-            Log.e("Places test", "No api key")
-            finish()
-            return
-        }
-
-        // Initialize the SDK
-        Places.initializeWithNewPlacesApiEnabled(applicationContext, apiKey)
-
-        // Create a new PlacesClient instance
-        val placesClient = Places.createClient(this)
-
         setContent {
             BusAppTheme {
                 val navController = rememberNavController()
+
                 Scaffold(
                     topBar = {
                         TopAppBar(
@@ -83,8 +67,6 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Box(modifier = Modifier.padding(it)) {
-                        val routeFinderViewmodel: RouteFinderViewmodel = viewModel()
-
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
                                 Home(navController = navController)
@@ -93,7 +75,7 @@ class MainActivity : ComponentActivity() {
                                 //ViewTimetables(navController = navController)
                             }
                             composable("RouteFinder") {
-                                RouteFinder(navController = navController, routeFinderViewmodel)
+                                RouteFinder(navController = navController, routeFinderViewModel)
                             }
                             composable("AddStop") {
                                 //AddBusStop(navController = navController)
