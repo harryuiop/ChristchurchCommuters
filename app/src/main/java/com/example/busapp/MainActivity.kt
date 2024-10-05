@@ -114,18 +114,23 @@ fun Home(navController: NavController, metroApiService: MetroApiService, lifecyc
         Spacer(modifier = Modifier.size(24.dp))
 
         Row {
-            Button(onClick = { navController.navigate("Timetables") }, modifier = Modifier.padding(horizontal = 20.dp)) {
+            Button(
+                onClick = { navController.navigate("Timetables") },
+                modifier = Modifier.padding(horizontal = 20.dp)
+            ) {
                 Text(text = "Timetables")
             }
             Button(onClick = { navController.navigate("RouteFinder") }) {
                 Text(text = "Route Finder")
             }
+        }
+        Row {
             Button(onClick = {
                 lifecycleScope.launch {
-                    apiResult = metroApiService.getRealTimeData("b44ad210715e47068b84c1362c311dd5")
+                    metroApiService.getRealTimeData()
                 }
             }) {
-                Text(text = "Get Data")
+                Text(text = "Refresh Data")
             }
         }
 

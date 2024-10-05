@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -19,6 +22,14 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val localProperties = Properties()
+        localProperties.load(FileInputStream(rootProject.file("local.properties")))
+        val metroApiKey = localProperties.getProperty("METRO_API_KEY", "")
+        val metroApiUrl = localProperties.getProperty("METRO_API_URL", "")
+        buildConfigField("String", "METRO_API_KEY", metroApiKey)
+        buildConfigField("String", "METRO_API_URL", metroApiUrl)
+
     }
 
     buildTypes {
@@ -39,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -50,8 +62,8 @@ android {
     }
 }
 
-dependencies {
 
+dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,6 +73,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.places)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -76,9 +89,5 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.0")
     implementation("com.google.transit:gtfs-realtime-bindings:0.0.4")
     implementation("com.google.protobuf:protobuf-java:3.19.4")
-    implementation("com.google.protobuf:protobuf-javalite:3.18.0")
-    implementation("com.google.protobuf:protobuf-kotlin-lite:3.20.1")
-
-    implementation("com.google.protobuf:protobuf-javalite:3.18.0")
-
 }
+
