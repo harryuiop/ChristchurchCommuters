@@ -59,18 +59,19 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Route Finder", fontSize = 24.sp)
 
         Spacer(modifier = Modifier.size(24.dp))
 
-        LocationSelector(routeFinderViewModel, isStartLocation = true)
+        LocationDropdownMenu(routeFinderViewModel, true)
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        LocationSelector(routeFinderViewModel, isStartLocation = false)
+        LocationDropdownMenu(routeFinderViewModel, false)
 
         Spacer(modifier = Modifier.size(12.dp))
 
@@ -118,7 +119,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationSelector(routeFinderViewModel: RouteFinderViewModel, isStartLocation: Boolean) {
+fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLocation: Boolean) {
     var expanded by remember { mutableStateOf(false) }
     var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
 
@@ -134,20 +135,16 @@ fun LocationSelector(routeFinderViewModel: RouteFinderViewModel, isStartLocation
 
         OutlinedTextField(
             value = TextFieldValue(currentLocation, selection = TextRange(currentLocation.length)),
-            onValueChange = {
+            onValueChange = { location ->
                 if (isStartLocation) {
-                    routeFinderViewModel.updateStartLocation(it.text)
+                    routeFinderViewModel.updateStartLocation(location.text)
                 } else {
-                    routeFinderViewModel.updateDestination(it.text)
+                    routeFinderViewModel.updateDestination(location.text)
                 }
 
-                routeFinderViewModel.findAutocompletePredictions(it.text) { result ->
-
-                    predictions = if (it.text.isEmpty()) {
-                        emptyList()
-                    } else { result }
-
-                    expanded = result.isNotEmpty() && it.text.isNotEmpty()
+                routeFinderViewModel.findAutocompletePredictions(location.text) { result ->
+                    predictions = result
+                    expanded = predictions.isNotEmpty()
                 }
             },
             modifier = Modifier
@@ -188,7 +185,9 @@ fun LocationSelector(routeFinderViewModel: RouteFinderViewModel, isStartLocation
     }
 }
 
-// Code snippet base taken from developer.android.com
+/**
+ * Advanced Time Picker Dialog taken from developer.android.com
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedTimePicker(
@@ -273,7 +272,7 @@ fun AdvancedTimePicker(
 
 @Composable
 fun AdvancedTimePickerDialog(
-    title: String = "Select Time",
+    title: String = "Select Time & Date",
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     content: @Composable () -> Unit,

@@ -32,7 +32,11 @@ class RouteFinderViewModel(
     }
 
     fun findAutocompletePredictions(newQuery: String, onResult: (List<AutocompletePrediction>) -> Unit) {
-        placesRepository.findAutocompletePredictions(newQuery, onResult)
+        if (newQuery.length > 2) {
+            placesRepository.findAutocompletePredictions(newQuery, onResult)
+        } else {
+            onResult(emptyList())
+        }
     }
 
     fun updateTravelTimeOption(newTravelTimeOption : String) {
