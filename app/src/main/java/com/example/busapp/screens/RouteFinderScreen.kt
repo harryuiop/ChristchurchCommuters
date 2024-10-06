@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -24,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -48,11 +49,11 @@ import com.example.busapp.viewmodels.RouteFinderViewModel
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
-    var checked by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
     Column (
@@ -79,30 +80,33 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 .padding(horizontal = 20.dp)
         ) {
             OutlinedButton(
-                onClick = { showDialog = true },
-                modifier = Modifier.padding(end = 12.dp)
+                onClick = {
+                        if (routeFinderViewModel.travelTimeOption == "Arrive by")
+                            routeFinderViewModel.updateTravelTimeOption("Leave by")
+                        else
+                            routeFinderViewModel.updateTravelTimeOption("Arrive by")
+              },
+                modifier = Modifier
+                    .padding(end = 12.dp)
+                    .width(125.dp)
             ) {
-                val timeOptionMsg = if (checked) {
-                    "Arrive by"
-                } else {
-                    "Leave by"
-                }
-
-                Text(timeOptionMsg)
+                Text(routeFinderViewModel.travelTimeOption)
             }
 
-            Switch(
-                checked = checked,
-                onCheckedChange = {
-                    checked = it
-                }
-            )
+            val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
+
+            OutlinedButton(
+                onClick = { showDialog = true }
+            ) {
+                Text(timeFormat.format(routeFinderViewModel.calendar.time))
+            }
         }
 
         if (showDialog) {
             AdvancedTimePicker(
                 onConfirm = { showDialog = false },
-                onDismiss = { showDialog = false }
+                onDismiss = { showDialog = false },
+                routeFinderViewModel
             )
         }
 
@@ -190,23 +194,80 @@ fun LocationSelector(routeFinderViewModel: RouteFinderViewModel, isStartLocation
 fun AdvancedTimePicker(
     onConfirm: (TimePickerState) -> Unit,
     onDismiss: () -> Unit,
+    routeFinderViewModel: RouteFinderViewModel
 ) {
+    val calendar by remember {
+        mutableStateOf(Calendar.getInstance())
+    }
 
-    val currentTime = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("d MMMM", Locale.getDefault())
+
+    var dateText by remember {
+        mutableStateOf(dateFormat.format(calendar.time))
+    }
 
     val timePickerState = rememberTimePickerState(
-        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
-        initialMinute = currentTime.get(Calendar.MINUTE),
+        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+        initialMinute = calendar.get(Calendar.MINUTE),
         is24Hour = false,
     )
 
     AdvancedTimePickerDialog(
-        onDismiss = { onDismiss() },
-        onConfirm = { onConfirm(timePickerState) },
+        onDismiss = {
+            onDismiss()
+        },
+        onConfirm = {
+            onConfirm(timePickerState)
+            val hour = timePickerState.hour
+            val minute = timePickerState.minute
+
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+
+            routeFinderViewModel.updateCalendar(calendar)
+        },
     ) {
         TimePicker(
             state = timePickerState,
         )
+
+        Row(
+            modifier = Modifier
+                .height(40.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            OutlinedButton(
+                onClick = {
+                    calendar.add(Calendar.DATE, -1)
+                    dateText = dateFormat.format(calendar.time)
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+            }
+
+            Text(
+                text = dateText,
+                modifier = Modifier
+                    .weight(2f)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+            )
+
+            OutlinedButton(
+                onClick = {
+                    calendar.add(Calendar.DATE, 1)
+                    dateText = dateFormat.format(calendar.time)
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "")
+            }
+        }
+
+        Spacer(modifier = Modifier.size(24.dp))
     }
 }
 
@@ -234,7 +295,9 @@ fun AdvancedTimePickerDialog(
                 ),
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -245,41 +308,6 @@ fun AdvancedTimePickerDialog(
                     style = MaterialTheme.typography.labelMedium
                 )
                 content()
-
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = { /*TODO*/ },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
-                    }
-
-                    val calendar = Calendar.getInstance()
-                    val dateFormat = SimpleDateFormat("d MMMM")
-                    val selectedDay = dateFormat.format(calendar.time)
-
-                    Text(
-                        text = selectedDay,
-                        modifier = Modifier
-                            .weight(2f)
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                    )
-
-                    OutlinedButton(
-                        onClick = { /*TODO*/ },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "")
-                    }
-                }
-
-                Spacer(modifier = Modifier.size(24.dp))
 
                 Row(
                     modifier = Modifier

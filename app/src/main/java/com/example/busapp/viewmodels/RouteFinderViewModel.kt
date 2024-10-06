@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.busapp.places.PlacesRepository
 import com.google.android.libraries.places.api.model.AutocompletePrediction
+import java.util.Calendar
 
 class RouteFinderViewModel(
     private val placesRepository: PlacesRepository
@@ -14,6 +15,12 @@ class RouteFinderViewModel(
         private set
 
     var destination by mutableStateOf("")
+        private set
+
+    var travelTimeOption by mutableStateOf("Arrive by")
+        private set
+
+    var calendar: Calendar by mutableStateOf(Calendar.getInstance())
         private set
 
     fun updateStartLocation(newStartLocation : String) {
@@ -26,5 +33,19 @@ class RouteFinderViewModel(
 
     fun findAutocompletePredictions(newQuery: String, onResult: (List<AutocompletePrediction>) -> Unit) {
         placesRepository.findAutocompletePredictions(newQuery, onResult)
+    }
+
+    fun updateTravelTimeOption(newTravelTimeOption : String) {
+        travelTimeOption = newTravelTimeOption
+    }
+
+    fun updateCalendar(newCalendar: Calendar) {
+        calendar = newCalendar
+    }
+
+    fun resetValues() {
+        startLocation = ""
+        destination = ""
+        calendar = Calendar.getInstance()
     }
 }
