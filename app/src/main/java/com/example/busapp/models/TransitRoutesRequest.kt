@@ -4,6 +4,7 @@ data class TransitRouteRequest(
     val origin: Origin,
     val destination: Destination,
     val travelMode: String,
+    val departureTime: String,
     val computeAlternativeRoutes: Boolean,
     val transitPreferences: TransitPreferences,
 )

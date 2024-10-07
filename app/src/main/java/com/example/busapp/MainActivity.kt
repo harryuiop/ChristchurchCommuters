@@ -2,6 +2,7 @@ package com.example.busapp
 
 import RouteFinder
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,18 +37,31 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.busapp.services.RoutesApiService
 import com.example.busapp.ui.theme.BusAppTheme
 import com.example.busapp.viewmodels.RouteFinderViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
     private val routeFinderViewModel: RouteFinderViewModel by viewModel()
+    private val routesApiService = RoutesApiService()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            CoroutineScope(Dispatchers.IO).launch {
+                val response: String = routesApiService.computeRoutes(
+                    "Eastgate, Christchurch",
+                    "Westfield, Christchurch",
+                    "2024-10-10T20:00:00Z").toString()
+                Log.i("RoutesAPI Test", response)
+            }
+
             BusAppTheme {
                 val navController = rememberNavController()
 
