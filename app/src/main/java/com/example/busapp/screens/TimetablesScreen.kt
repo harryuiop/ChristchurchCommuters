@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,16 +51,31 @@ fun ViewTimetables(
     val routes: List<List<String>> by timetableViewModel.routes.collectAsState()
     //Trips have pair of trip_id and service_id, service_id = 1,2,3,4.
     // - service_id: 1 = Sunday, 2 = Friday, 3 = Monday-Friday, 4 = Saturday
-    val tripsPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.tripsPerRoute.collectAsState()
-    val stopTimesPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
-    val stopNamesPerRoute: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
+    val sundayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.sundayTripsPerRouteDirection0.collectAsState()
+    val fridayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.fridayTripsPerRouteDirection0.collectAsState()
+    val mondayToFridayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.mondayToFridayTripsPerRouteDirection0.collectAsState()
+    val saturdayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.saturdayTripsPerRouteDirection0.collectAsState()
+
+    val sundayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.sundayTripsPerRouteDirection1.collectAsState()
+    val fridayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.fridayTripsPerRouteDirection1.collectAsState()
+    val mondayToFridayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.mondayToFridayTripsPerRouteDirection1.collectAsState()
+    val saturdayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.saturdayTripsPerRouteDirection1.collectAsState()
+
+    val stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
+    val stopNamesPerTrip: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
     println("timetable screen")
-    println(stopNamesPerRoute)
-    var expanded by remember { mutableStateOf(false) }
-    var selectedRouteName by remember { mutableStateOf("")}
-    var selectedRouteId by remember { mutableStateOf("") }
-    var selectedDay by remember { mutableStateOf("") }
-    var headerList by remember { mutableStateOf(mutableListOf<String>()) }
+    println(mondayToFridayTripsPerRouteDirection1["100_36_3"])
+    //see what stop names get printed
+    mondayToFridayTripsPerRouteDirection1["100_36_3"]?.forEach { i ->
+        println(stopNamesPerTrip[i])
+    }
+    println(stopNamesPerTrip[mondayToFridayTripsPerRouteDirection1["100_36_3"]?.get(1)])
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var selectedRouteName by rememberSaveable { mutableStateOf("")}
+    var selectedRouteId by rememberSaveable { mutableStateOf("") }
+    var selectedDay by rememberSaveable { mutableStateOf("") }
+    var zeroDirection by rememberSaveable { mutableStateOf(false) }
+    var headerList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -95,8 +111,11 @@ fun ViewTimetables(
                                 onClick = {
                                     selectedRouteName = route[1] + " - " + route[2]
                                     selectedRouteId = route[0]
-                                    //TODO: Get weekday trip_id when file has been uploaded
-                                    headerList = stopNamesPerRoute[route[0]]!!
+
+                                    selectedDay = "3"
+                                    zeroDirection = false
+
+                                    headerList = findMostNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
                                     expanded = false
                                 })
                         }
@@ -106,7 +125,24 @@ fun ViewTimetables(
                 Spacer(modifier = Modifier.size(20.dp))
 
                 Button(
-                    onClick = {}
+                    onClick = {
+                        zeroDirection = !zeroDirection
+                        if (!zeroDirection) {
+                            when (selectedDay) {
+                                "1" -> headerList = findMostNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "2" -> headerList = findMostNames(fridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "3" -> headerList = findMostNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "4" -> headerList = findMostNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                            }
+                        } else {
+                            when (selectedDay) {
+                                "1" -> headerList = findMostNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "2" -> headerList = findMostNames(fridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "3" -> headerList = findMostNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "4" -> headerList = findMostNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                            }
+                        }
+                    }
                 ) {
                     Text("View Other Direction", fontSize = 12.sp)
                 }
@@ -118,17 +154,17 @@ fun ViewTimetables(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Button(
-                        onClick = { selectedDay = "Weekday" }
+                        onClick = { selectedDay = "3" }
                     ) {
                         Text("Weekday")
                     }
                     Button(
-                        onClick = { selectedDay = "Saturday" }
+                        onClick = { selectedDay = "4" }
                     ) {
                         Text("Saturday")
                     }
                     Button(
-                        onClick = { selectedDay = "Sunday" }
+                        onClick = { selectedDay = "1" }
                     ) {
                         Text("Sunday")
                     }
@@ -184,4 +220,18 @@ fun ViewTimetables(
             }
         }
     }
+}
+
+fun findMostNames(
+    busStopIdList: MutableList<String>,
+    stopNamesPerTrip: Map<String, MutableList<String>>
+): MutableList<String> {
+    var currentLongestList = mutableListOf<String>()
+    busStopIdList.forEach { id ->
+        val newList = stopNamesPerTrip[id]!!
+        if (newList.size > currentLongestList.size) {
+            currentLongestList = newList
+        }
+    }
+    return currentLongestList
 }

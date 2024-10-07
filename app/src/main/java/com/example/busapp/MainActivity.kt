@@ -105,7 +105,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
     Column (
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Christchurch Commuters", fontSize = 24.sp)
@@ -128,7 +130,9 @@ fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
 
         Button(
             onClick = { navController.navigate("AddStop") },
-            modifier = Modifier.fillMaxWidth().border(8.dp, Color.White, shape = RectangleShape),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(8.dp, Color.White, shape = RectangleShape),
             colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
         ) {
             Text("Add Bus Stop")
@@ -152,7 +156,15 @@ suspend fun readFiles(context: Context) = coroutineScope {
     val stopTimesPerTrip = HashMap<String, MutableList<Pair<String, String>>>()
     val stopsHashMap = HashMap<String, String>()
 
-    val tripsPerRoute = HashMap<String, MutableList<Pair<String, String>>>()
+    val sundayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
+    val fridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
+    val mondayToFridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
+    val saturdayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
+
+    val sundayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
+    val fridayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
+    val mondayToFridayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
+    val saturdayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
 
     var reader: BufferedReader? = null
     try {
@@ -172,15 +184,20 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
-                val routeId = listLine[0]
-                if (!tripsPerRoute.containsKey(routeId)) {
-                    //Pair of trip_id and service_id
-                    tripsPerRoute[routeId] = mutableListOf(Pair(listLine[2], listLine[1]))
+                val direction = listLine[5]
+                if (direction == "0") {
+                    when (listLine[1]) {
+                        "1" -> addToMap(sundayTripsPerRouteDirection0, listLine)
+                        "2" -> addToMap(fridayTripsPerRouteDirection0, listLine)
+                        "3" -> addToMap(mondayToFridayTripsPerRouteDirection0, listLine)
+                        "4" -> addToMap(saturdayTripsPerRouteDirection0, listLine)
+                    }
                 } else {
-                    val currentList = tripsPerRoute[routeId]
-                    currentList?.add(Pair(listLine[2],listLine[1]))
-                    if (currentList != null) {
-                        tripsPerRoute[routeId] = currentList
+                    when (listLine[1]) {
+                        "1" -> addToMap(sundayTripsPerRouteDirection1, listLine)
+                        "2" -> addToMap(fridayTripsPerRouteDirection1, listLine)
+                        "3" -> addToMap(mondayToFridayTripsPerRouteDirection1, listLine)
+                        "4" -> addToMap(saturdayTripsPerRouteDirection1, listLine)
                     }
                 }
             }
@@ -236,8 +253,22 @@ suspend fun readFiles(context: Context) = coroutineScope {
         stopNamesPerTrip[key] = stopNamesList
     }
 
-    println("coroutine")
-    println(tripsPerRoute)
+    return@coroutineScope FileData(routes, sundayTripsPerRouteDirection0, fridayTripsPerRouteDirection0, mondayToFridayTripsPerRouteDirection0, saturdayTripsPerRouteDirection0, sundayTripsPerRouteDirection1, fridayTripsPerRouteDirection1, mondayToFridayTripsPerRouteDirection1, saturdayTripsPerRouteDirection1, stopTimesPerTrip, stopNamesPerTrip)
+}
 
-    return@coroutineScope FileData(routes, tripsPerRoute, stopTimesPerTrip, stopNamesPerTrip)
+fun addToMap(
+    toAdd: HashMap<String, MutableList<String>>,
+    listLine: List<String>,
+) {
+    val routeId = listLine[0]
+    if (!toAdd.containsKey(routeId)) {
+        //Adding trip_id
+        toAdd[routeId] = mutableListOf(listLine[2])
+    } else {
+        val currentList = toAdd[routeId]
+        currentList?.add(listLine[2])
+        if (currentList != null) {
+            toAdd[routeId] = currentList
+        }
+    }
 }
