@@ -152,7 +152,7 @@ suspend fun readFiles(context: Context) = coroutineScope {
     val stopTimesPerTrip = HashMap<String, MutableList<Pair<String, String>>>()
     val stopsHashMap = HashMap<String, String>()
 
-    val tripsPerRoute = HashMap<String, MutableList<String>>()
+    val tripsPerRoute = HashMap<String, MutableList<Pair<String, String>>>()
 
     var reader: BufferedReader? = null
     try {
@@ -172,15 +172,15 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
-                //Adding route_id, trip_id, direction_id
-                val tripId = listLine[0]
-                if (!tripsPerRoute.containsKey(tripId)) {
-                    tripsPerRoute[tripId] = mutableListOf(listLine[2])
+                val routeId = listLine[0]
+                if (!tripsPerRoute.containsKey(routeId)) {
+                    //Pair of trip_id and service_id
+                    tripsPerRoute[routeId] = mutableListOf(Pair(listLine[2], listLine[1]))
                 } else {
-                    val currentList = tripsPerRoute[tripId]
-                    currentList?.add(listLine[2])
+                    val currentList = tripsPerRoute[routeId]
+                    currentList?.add(Pair(listLine[2],listLine[1]))
                     if (currentList != null) {
-                        tripsPerRoute[tripId] = currentList
+                        tripsPerRoute[routeId] = currentList
                     }
                 }
             }
@@ -191,11 +191,11 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
-                //Adding trip_id, arrival_time, stop_id
                 //Only stop times with timepoint = 1 are displayed on metro website
                 if (listLine[9] == "1") {
                     val tripId = listLine[0]
                     if (!stopTimesPerTrip.containsKey(tripId)) {
+                        //Pair of arrival_time and stop_id
                         stopTimesPerTrip[tripId] = mutableListOf(Pair(listLine[1], listLine[3]))
                     } else {
                         val currentList = stopTimesPerTrip[tripId]

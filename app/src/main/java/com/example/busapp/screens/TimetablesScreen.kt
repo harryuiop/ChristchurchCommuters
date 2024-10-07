@@ -48,7 +48,9 @@ fun ViewTimetables(
     timetableViewModel: TimetableViewModel
 ) {
     val routes: List<List<String>> by timetableViewModel.routes.collectAsState()
-    val tripsPerRoute: Map<String, MutableList<String>> by timetableViewModel.tripsPerRoute.collectAsState()
+    //Trips have pair of trip_id and service_id, service_id = 1,2,3,4.
+    // - service_id: 1 = Sunday, 2 = Friday, 3 = Monday-Friday, 4 = Saturday
+    val tripsPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.tripsPerRoute.collectAsState()
     val stopTimesPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
     val stopNamesPerRoute: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
     println("timetable screen")
