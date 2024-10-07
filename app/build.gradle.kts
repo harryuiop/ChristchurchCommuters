@@ -1,13 +1,9 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-}
-
-buildscript {
-    dependencies {
-        classpath("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1")
-    }
 }
 
 android {
@@ -25,6 +21,17 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val localProperties = Properties()
+        localProperties.load(FileInputStream(rootProject.file("local.properties")))
+        val metroApiKey = localProperties.getProperty("METRO_API_KEY", "")
+        val metroApiUrl = localProperties.getProperty("METRO_API_URL", "")
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY", "")
+        val routesApiUrl = localProperties.getProperty("ROUTES_API_URL", "")
+        buildConfigField("String", "METRO_API_KEY", metroApiKey)
+        buildConfigField("String", "METRO_API_URL", metroApiUrl)
+        buildConfigField("String", "MAPS_API_KEY", mapsApiKey)
+        buildConfigField("String", "ROUTES_API_URL", routesApiUrl)
     }
     buildTypes {
         release {
@@ -53,22 +60,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-    }
-    secrets {
-        // To add your Maps API key to this project:
-        // 1. If the secrets.properties file does not exist, create it in the same folder as the local.properties file.
-        // 2. Add this line, where YOUR_API_KEY is your API key:
-        //        MAPS_API_KEY=YOUR_API_KEY
-        propertiesFileName = "secrets.properties"
-
-        // A properties file containing default secret values. This file can be
-        // checked in version control.
-        defaultPropertiesFileName = "local.defaults.properties"
-
-        // Configure which keys should be ignored by the plugin by providing regular expressions.
-        // "sdk.dir" is ignored by default.
-        ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
-        ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
     }
 }
 

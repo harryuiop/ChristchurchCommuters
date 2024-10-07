@@ -14,12 +14,7 @@ import org.koin.dsl.module
 val placesModule = module {
     single<PlacesClient> {
         // Define a variable to hold the Places API key.
-        val apiKey = BuildConfig.PLACES_API_KEY
-
-        // Log an error if apiKey is not set.
-        if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
-            Log.e("Places test", "No api key")
-        }
+        val apiKey = BuildConfig.MAPS_API_KEY
 
         // Initialize the SDK
         Places.initializeWithNewPlacesApiEnabled(androidContext(), apiKey)
