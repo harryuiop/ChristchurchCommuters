@@ -27,6 +27,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,9 +42,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
 import com.example.busapp.viewmodels.TimetableViewModel
+import kotlin.math.ceil
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("CoroutineCreationDuringComposition")
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun ViewTimetables(
     navController: NavController,
@@ -65,10 +68,6 @@ fun ViewTimetables(
     val stopNamesPerTrip: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
     println("timetable screen")
     println(mondayToFridayTripsPerRouteDirection1["100_36_3"])
-    //see what stop names get printed
-    mondayToFridayTripsPerRouteDirection1["100_36_3"]?.forEach { i ->
-        println(stopNamesPerTrip[i])
-    }
     println(stopNamesPerTrip[mondayToFridayTripsPerRouteDirection1["100_36_3"]?.get(1)])
     var expanded by rememberSaveable { mutableStateOf(false) }
     var selectedRouteName by rememberSaveable { mutableStateOf("")}
@@ -76,6 +75,9 @@ fun ViewTimetables(
     var selectedDay by rememberSaveable { mutableStateOf("") }
     var zeroDirection by rememberSaveable { mutableStateOf(false) }
     var headerList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
+    var dataList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
+    var numColumns by rememberSaveable { mutableIntStateOf(1) }
+    var numRows by rememberSaveable { mutableDoubleStateOf(1.0) }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,8 +117,12 @@ fun ViewTimetables(
                                     selectedDay = "3"
                                     zeroDirection = false
 
-                                    headerList = findMostNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
+                                    headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
+                                    dataList = getDataList(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopTimesPerTrip)
                                     expanded = false
+
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
                                 })
                         }
                     }
@@ -129,17 +135,17 @@ fun ViewTimetables(
                         zeroDirection = !zeroDirection
                         if (!zeroDirection) {
                             when (selectedDay) {
-                                "1" -> headerList = findMostNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                "2" -> headerList = findMostNames(fridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                "3" -> headerList = findMostNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                "4" -> headerList = findMostNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "1" -> headerList = findHeaderNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "2" -> headerList = findHeaderNames(fridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "3" -> headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                "4" -> headerList = findHeaderNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
                             }
                         } else {
                             when (selectedDay) {
-                                "1" -> headerList = findMostNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                "2" -> headerList = findMostNames(fridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                "3" -> headerList = findMostNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                "4" -> headerList = findMostNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "1" -> headerList = findHeaderNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "2" -> headerList = findHeaderNames(fridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "3" -> headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                "4" -> headerList = findHeaderNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
                             }
                         }
                     }
@@ -184,11 +190,6 @@ fun ViewTimetables(
         //From stops.txt: For stop_id get stop_name
         // - display the stop_name as the column headers
 
-        //TODO: Get the data from the stop_times/trips/stops files
-        //val headerList = stopNamesPerRoute[selectedRouteId]
-        val headerList2 = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
-        val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
-
         val columnHeaderModifier = Modifier
             .border(1.dp, Color.Black)
             .wrapContentSize()
@@ -198,18 +199,15 @@ fun ViewTimetables(
             .wrapContentSize()
             .padding(4.dp)
 
-        //TODO: Change value in here to num stops in route
-        val numColumns = 9
         item {
             LazyRow {
                 item {
-                    val size = headerList.size
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(numColumns),
                         //Will need to change how height is set up later
                         modifier = Modifier
                             .width((numColumns * 128).dp)
-                            .height(((size) * 30).dp),
+                            .height((numRows * 35).dp),
                     ) {
                         items(headerList) {
                             Text(it, columnHeaderModifier, fontSize = 10.sp)
@@ -222,7 +220,7 @@ fun ViewTimetables(
     }
 }
 
-fun findMostNames(
+fun findHeaderNames(
     busStopIdList: MutableList<String>,
     stopNamesPerTrip: Map<String, MutableList<String>>
 ): MutableList<String> {
@@ -234,4 +232,44 @@ fun findMostNames(
         }
     }
     return currentLongestList
+}
+
+fun findLongestStopSequence(
+    tripsPerRoute: MutableList<String>,
+    stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>>
+): List<String> {
+    var currentLongestList = listOf<String>()
+    tripsPerRoute.forEach { tripId ->
+        val stops = stopTimesPerTrip[tripId]!!
+        if (stops.size > currentLongestList.size) {
+            currentLongestList = stops.map { it.second }
+        }
+    }
+    return currentLongestList
+}
+
+fun getDataList(
+    tripsPerRoute: MutableList<String>,
+    stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>>
+): MutableList<String> {
+    val finalList = mutableListOf<String>()
+    val stopSequence = findLongestStopSequence(tripsPerRoute, stopTimesPerTrip)
+    tripsPerRoute.forEach { tripId ->
+        val stops = stopTimesPerTrip[tripId]!!
+        println(tripId)
+        println(stops)
+        val currentStops = mutableListOf<String>()
+        var curIndex = 0
+        stopSequence.forEach { pair ->
+            if (curIndex < stops.size && stops[curIndex].second == pair) {
+                currentStops.add(stops[curIndex].first)
+                curIndex++
+            } else {
+                currentStops.add("")
+            }
+        }
+        println(currentStops)
+        finalList.addAll(currentStops)
+    }
+    return finalList
 }
