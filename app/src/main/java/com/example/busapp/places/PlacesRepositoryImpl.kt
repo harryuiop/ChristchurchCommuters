@@ -12,7 +12,7 @@ class PlacesRepositoryImpl(
 ) : PlacesRepository {
     override fun findAutocompletePredictions(query: String, onResult: (List<AutocompletePrediction>) -> Unit) {
         val center = LatLng(-43.531111, 172.636111)
-        val circle = CircularBounds.newInstance(center, 5000.0) // radius in meters
+        val circle = CircularBounds.newInstance(center, 30000.0) // radius in meters
         val autoCompletePlacesRequest = FindAutocompletePredictionsRequest.builder()
             .setQuery(query)
             .setRegionCode("NZ")
