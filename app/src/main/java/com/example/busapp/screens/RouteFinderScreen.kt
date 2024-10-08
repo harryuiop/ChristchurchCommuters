@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -83,7 +81,8 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Route Finder", fontSize = 24.sp)
@@ -172,11 +171,11 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
         Text(text = "No routes available")
     }
 
-    LazyColumn {
+    Column {
         transitRoutesResponse.routes.forEachIndexed() { index, route ->
-            item {
+//            item {
                 RouteCard(index, route)
-            }
+//            }
         }
     }
 }
