@@ -98,7 +98,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                     startPredictions = result
                 }
             },
-            placeholderText = "Start start location",
+            placeholderText = "Choose start location",
             onSelectPrediction = { routeFinderViewModel.updateStartLocation(it) }
         )
 
@@ -112,7 +112,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                     destinationPredictions = result
                 }
             },
-            placeholderText = "Start destination",
+            placeholderText = "Choose destination",
             onSelectPrediction = { routeFinderViewModel.updateDestination(it) }
         )
 
