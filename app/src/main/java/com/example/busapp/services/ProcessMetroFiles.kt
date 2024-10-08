@@ -110,7 +110,21 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         stopNamesPerTrip[key] = stopNamesList
     }
 
-    return@coroutineScope FileData(routes, sundayTripsPerRouteDirection0, fridayTripsPerRouteDirection0, mondayToFridayTripsPerRouteDirection0, saturdayTripsPerRouteDirection0, sundayTripsPerRouteDirection1, fridayTripsPerRouteDirection1, mondayToFridayTripsPerRouteDirection1, saturdayTripsPerRouteDirection1, stopTimesPerTrip, stopNamesPerTrip)
+    return@coroutineScope FileData(
+        routes,
+        sundayTripsPerRouteDirection0,
+        fridayTripsPerRouteDirection0,
+        mondayToFridayTripsPerRouteDirection0,
+        saturdayTripsPerRouteDirection0,
+        sundayTripsPerRouteDirection1,
+        fridayTripsPerRouteDirection1,
+        mondayToFridayTripsPerRouteDirection1,
+        saturdayTripsPerRouteDirection1,
+        tripIdToHeadboard,
+        tripIdToRouteId,
+        tripIdToNameNumber,
+        stopTimesPerTrip,
+        stopNamesPerTrip)
 }
 
 fun addToMap(
