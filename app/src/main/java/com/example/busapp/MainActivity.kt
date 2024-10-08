@@ -40,12 +40,16 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.time.Duration.Companion.hours
+
 
 class MainActivity : ComponentActivity() {
 
@@ -90,7 +94,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "19428")
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "23940")
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -121,12 +125,6 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
     var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
-
-    feed.tripUpdates.forEach {
-        it.stopTimeUpdates.forEach{
-            println(it)
-        }
-    }
 
     val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> = getRelevantTripUpdates(
                                                                 gftsRealTimeViewModel.feed.value,
@@ -163,12 +161,11 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Trip ID: ${tripUpdate.first.tripId}")
-                        Text("Expected Arrival: ${tripUpdate.second.arrival?.time}")
-                        Text("Expected Departure: ${tripUpdate.second.departure?.time}")
+                        Text("Route: ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.first.tripId]}")
+                        Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
+                        Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
                         Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
-                        Text("Stops: ${tripUpdate.first.stopTimeUpdates.size}")
-                        Text("Lasted Updated: ${refreshedData.lastUpdated}")
+                        Text("Lasted Updated: ${formatTime(refreshedData.lastUpdated)}")
                     }
                 }
             }
@@ -228,9 +225,16 @@ fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<Tr
     return relevantTrips
 }
 
+fun formatTime(date: Date?): String {
+    if (date == null) return "N/A"
+    val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+    return sdf.format(date)
+}
+
 suspend fun readFiles(context: Context) = coroutineScope {
     val routes = mutableListOf<List<String>>()
     val stopTimesPerTrip = HashMap<String, MutableList<Pair<String, String>>>()
+    val tripIdToHeadboard = HashMap<String, String>()
     val stopsHashMap = HashMap<String, String>()
 
     val sundayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
@@ -261,6 +265,9 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
+                val id = listLine[2]
+                val headboard = listLine[3]
+                println(id + headboard)
                 val direction = listLine[5]
                 if (direction == "0") {
                     when (listLine[1]) {
@@ -277,6 +284,7 @@ suspend fun readFiles(context: Context) = coroutineScope {
                         "4" -> addToMap(saturdayTripsPerRouteDirection1, listLine)
                     }
                 }
+                tripIdToHeadboard[id] = headboard
             }
             counter++
         }
@@ -331,7 +339,20 @@ suspend fun readFiles(context: Context) = coroutineScope {
         stopNamesPerTrip[key] = stopNamesList
     }
 
-    return@coroutineScope FileData(routes, sundayTripsPerRouteDirection0, fridayTripsPerRouteDirection0, mondayToFridayTripsPerRouteDirection0, saturdayTripsPerRouteDirection0, sundayTripsPerRouteDirection1, fridayTripsPerRouteDirection1, mondayToFridayTripsPerRouteDirection1, saturdayTripsPerRouteDirection1, stopTimesPerTrip, stopNamesPerTrip)
+    return@coroutineScope FileData(
+                                routes,
+                                sundayTripsPerRouteDirection0,
+                                fridayTripsPerRouteDirection0,
+                                mondayToFridayTripsPerRouteDirection0,
+                                saturdayTripsPerRouteDirection0,
+                                sundayTripsPerRouteDirection1,
+                                fridayTripsPerRouteDirection1,
+                                mondayToFridayTripsPerRouteDirection1,
+                                saturdayTripsPerRouteDirection1,
+                                tripIdToHeadboard,
+                                stopTimesPerTrip,
+                                stopNamesPerTrip
+                                )
 }
 
 fun addToMap(
