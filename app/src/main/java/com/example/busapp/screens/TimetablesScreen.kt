@@ -129,6 +129,8 @@ fun ViewTimetables(
 
                                     expanded = false
                                     weekdayClicked = true
+                                    saturdayClicked = false
+                                    sundayClicked = false
                                     progressVisible = true
                                     tableVisible = false
                                     CoroutineScope(Dispatchers.IO).launch {
