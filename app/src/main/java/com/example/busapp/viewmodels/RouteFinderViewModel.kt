@@ -23,7 +23,7 @@ class RouteFinderViewModel(
     var destination by mutableStateOf("")
         private set
 
-    var travelTimeOption by mutableStateOf("Arrive by")
+    var travelTimeOption by mutableStateOf("Leave by")
         private set
 
     var calendar: Calendar by mutableStateOf(Calendar.getInstance())

@@ -1,3 +1,4 @@
+import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,30 +24,37 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.example.busapp.models.Leg
+import com.example.busapp.models.Route
+import com.example.busapp.models.TransitDetails
+import com.example.busapp.models.TransitRoutesResponse
 import com.example.busapp.viewmodels.RouteFinderViewModel
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import kotlinx.coroutines.CoroutineScope
@@ -57,16 +67,23 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
-    var transitRoutes by remember { mutableStateOf("") }
-    var startPredictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
-    var destinationPredictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    var transitRoutes by rememberSaveable { mutableStateOf(TransitRoutesResponse(emptyList())) }
+    var startPredictions by rememberSaveable { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    var destinationPredictions by rememberSaveable { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+
+    if (showDialog) {
+        AdvancedTimePicker(
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false },
+            routeFinderViewModel
+        )
+    }
 
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Route Finder", fontSize = 24.sp)
@@ -77,8 +94,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             onClearQuery = { routeFinderViewModel.updateStartLocation("") },
             predictions = startPredictions,
             onQueryChange = {
-                routeFinderViewModel.findAutocompletePredictions(it) {
-                    result ->
+                routeFinderViewModel.findAutocompletePredictions(it) { result ->
                     startPredictions = result
                 }
             },
@@ -92,8 +108,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             onClearQuery = { routeFinderViewModel.updateDestination("") },
             predictions = destinationPredictions,
             onQueryChange = {
-                routeFinderViewModel.findAutocompletePredictions(it) {
-                        result ->
+                routeFinderViewModel.findAutocompletePredictions(it) { result ->
                     destinationPredictions = result
                 }
             },
@@ -109,6 +124,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 .fillMaxWidth()
         ) {
             OutlinedButton(
+                enabled = false,
                 onClick = {
                         if (routeFinderViewModel.travelTimeOption == "Arrive by")
                             routeFinderViewModel.updateTravelTimeOption("Leave by")
@@ -132,8 +148,8 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             Button(
                 onClick = {
                     CoroutineScope(Dispatchers.IO).launch {
-                        transitRoutes = routeFinderViewModel.getRoutes().toString()
-                        println(transitRoutes)
+                        transitRoutes = routeFinderViewModel.getRoutes()
+                        println(transitRoutes.toString())
                     }
                 }
             ) {
@@ -144,31 +160,85 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             }
         }
 
-        if (showDialog) {
-            AdvancedTimePicker(
-                onConfirm = { showDialog = false },
-                onDismiss = { showDialog = false },
-                routeFinderViewModel
-            )
-        }
-
         Spacer(modifier = Modifier.size(24.dp))
 
-        Text(text = "Upcoming", fontSize = 12.sp)
-
-        Spacer(modifier = Modifier.size(24.dp))
-
-        TextField(
-            value = transitRoutes,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        TransitRoutesView(transitRoutes)
     }
 }
 
-fun Routes(routeFinderViewModel: RouteFinderViewModel) {
+@Composable
+fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
+    if (transitRoutesResponse.routes.isEmpty()) {
+        Text(text = "No routes available")
+    }
 
+    LazyColumn {
+        items(transitRoutesResponse.routes) { route ->
+            RouteCard(route)
+        }
+    }
+}
+
+@Composable
+fun RouteCard(route: Route) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.elevatedCardElevation()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            route.legs.forEach { leg ->
+                LegView(leg)
+            }
+        }
+    }
+}
+
+@Composable
+fun LegView(leg: Leg) {
+    leg.steps.forEach { step ->
+        step.transitDetails?.let { transitDetails ->
+            StepView(transitDetails)
+        }
+    }
+}
+
+@Composable
+fun StepView(transitDetails: TransitDetails) {
+    Column(modifier = Modifier.padding(6.dp)) {
+        Text(text = "Walk to stop:", color = Color.Black)
+        Text(text = transitDetails.stopDetails.departureStop.name)
+
+        Spacer(modifier = Modifier.size(6.dp))
+
+        Text(text = "Take the bus line:", color = Color.Black)
+        Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
+
+        Spacer(modifier = Modifier.size(6.dp))
+
+        Text(text = "Direction:", color = Color.Black)
+        Text(text = transitDetails.headsign)
+
+        Spacer(modifier = Modifier.size(6.dp))
+
+        Text(text = "The bus arrives at:", color = Color.Black)
+        Text(text = transitDetails.localizedValues.departureTime.time.text)
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        Text(text = "Exit bus at stop:", color = Color.Black)
+        Text(text = transitDetails.stopDetails.arrivalStop.name)
+
+        Spacer(modifier = Modifier.size(6.dp))
+
+        Text(text = "Arrive at:", color = Color.Black)
+        Text(text = transitDetails.localizedValues.arrivalTime.time.text)
+
+        Spacer(modifier = Modifier.size(6.dp))
+
+        HorizontalDivider(modifier = Modifier.padding(3.dp), thickness = 2.dp, color = Color.White)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -180,8 +250,8 @@ fun LocationSearchBar(
     placeholderText: String,
     onSelectPrediction: (String) -> Unit
 ) {
-    var active by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
+    var active by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
 
     DockedSearchBar(
         modifier = Modifier.fillMaxWidth(),
@@ -253,13 +323,13 @@ fun AdvancedTimePicker(
     onDismiss: () -> Unit,
     routeFinderViewModel: RouteFinderViewModel
 ) {
-    val calendar by remember {
+    val calendar by rememberSaveable {
         mutableStateOf(Calendar.getInstance())
     }
 
     val dateFormat = SimpleDateFormat("d MMMM", Locale.getDefault())
 
-    var dateText by remember {
+    var dateText by rememberSaveable {
         mutableStateOf(dateFormat.format(calendar.time))
     }
 
