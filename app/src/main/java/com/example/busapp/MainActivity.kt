@@ -22,6 +22,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 
+import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
+
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +65,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val timetableViewModel: TimetableViewModel = viewModel()
+            val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
+
             CoroutineScope(Dispatchers.IO).launch {
                 val fileData = readMetroFiles(this@MainActivity)
                 timetableViewModel.setData(fileData)
@@ -84,8 +89,6 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Box(modifier = Modifier.padding(it)) {
-
-                        val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
 
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
@@ -154,98 +157,4 @@ fun Home(navController: NavController, /*busStopViewModel: BusStopViewModel*/) {
             }
         }
     }
-}
-
-suspend fun readFiles(context: Context) = coroutineScope {
-    val routes = mutableListOf<List<String?>>()
-    val stopTimesPerTrip = HashMap<String?, MutableList<Pair<String?, String?>>>()
-    val stopsHashMap = HashMap<String?, String?>()
-
-    val tripsPerRoute = HashMap<String?, MutableList<String?>>()
-    var reader: BufferedReader? = null
-    try {
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.routes)))
-        var line: String?
-        var counter = 0
-        while (reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding route_id, route_short_name, route_long_name
-                routes.add(listOf(listLine?.get(0), listLine?.get(2), listLine?.get(3)))
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.trips)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding route_id, trip_id, direction_id
-                val tripId = listLine?.get(0)
-                if (!tripsPerRoute.containsKey(tripId)) {
-                    tripsPerRoute[tripId] = mutableListOf(listLine?.get(2))
-                } else {
-                    val currentList = tripsPerRoute[tripId]
-                    currentList?.add(listLine?.get(2))
-                    if (currentList != null) {
-                        tripsPerRoute[tripId] = currentList
-                    }
-                }
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.stop_times)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding trip_id, arrival_time, stop_id
-                //Only stop times with timepoint = 1 are displayed on metro website
-                if (listLine?.get(9) == "1") {
-                    val tripId = listLine[0]
-                    if (!stopTimesPerTrip.containsKey(tripId)) {
-                        stopTimesPerTrip[tripId] = mutableListOf(Pair(listLine[1], listLine[3]))
-                    } else {
-                        val currentList = stopTimesPerTrip[tripId]
-                        currentList?.add(Pair(listLine[1], listLine[3]))
-                        if (currentList != null) {
-                            stopTimesPerTrip[tripId] = currentList
-                        }
-                    }
-                }
-            }
-            counter++
-        }
-        reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.stops)))
-        counter = 0
-        while(reader.readLine().also { line = it } != null) {
-            if (counter > 0) {
-                val listLine = line?.split(",")
-                //Adding stop_id, stop_name
-                stopsHashMap[listLine?.get(0)] = listLine?.get(2)
-            }
-            counter++
-        }
-    } catch (e: Exception) {
-        Log.e("Reading Metro Files","Error: ${e.message}")
-    } finally {
-        try {
-            reader?.close()
-        } catch (e: Exception) {
-            Log.e("Reading Metro Files","Error: ${e.message}")
-        }
-    }
-    val stopNamesPerTrip = HashMap<String?, MutableList<String?>>()
-    stopTimesPerTrip.forEach { (key, value) ->
-        val stopNamesList = mutableListOf<String?>()
-        value.forEach { stopNamePair ->
-            stopNamesList.add(stopsHashMap[stopNamePair.second])
-        }
-        stopNamesPerTrip[key] = stopNamesList
-    }
-
-    println("coroutine")
-    println(tripsPerRoute)
-
-    return@coroutineScope FileData(routes, tripsPerRoute, stopTimesPerTrip, stopNamesPerTrip)
 }
