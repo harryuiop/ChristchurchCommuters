@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 
 import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
 
@@ -27,6 +29,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -136,7 +143,7 @@ class MainActivity : ComponentActivity() {
 fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel,
                                         timetableViewModel: TimetableViewModel,
                                         metroApiService: MetroApiService,
-                                        lifecycleScope: kotlinx.coroutines.CoroutineScope,
+                                        lifecycleScope: CoroutineScope,
                                         stopId: String) {
     val feed by gftsRealTimeViewModel.feed.collectAsState()
 
