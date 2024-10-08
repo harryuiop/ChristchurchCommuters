@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -328,8 +329,8 @@ fun ViewTimetables(
 
         val columnHeaderModifier = Modifier
             .border(1.dp, Color.Black)
-            .wrapContentSize()
             .padding(4.dp)
+            .size(50.dp)
         val dataModifier = Modifier
             .border(1.dp, Color.Black)
             .wrapContentSize()
