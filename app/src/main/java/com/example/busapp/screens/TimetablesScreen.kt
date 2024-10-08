@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -27,9 +29,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,25 +42,43 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
 import com.example.busapp.viewmodels.TimetableViewModel
+import kotlin.math.ceil
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("CoroutineCreationDuringComposition")
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun ViewTimetables(
     navController: NavController,
     timetableViewModel: TimetableViewModel
 ) {
     val routes: List<List<String>> by timetableViewModel.routes.collectAsState()
-    val tripsPerRoute: Map<String, MutableList<String>> by timetableViewModel.tripsPerRoute.collectAsState()
-    val stopTimesPerRoute: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
-    val stopNamesPerRoute: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
-    println("timetable screen")
-    println(stopNamesPerRoute)
-    var expanded by remember { mutableStateOf(false) }
-    var selectedRouteName by remember { mutableStateOf("")}
-    var selectedRouteId by remember { mutableStateOf("") }
-    var selectedDay by remember { mutableStateOf("") }
-    var headerList by remember { mutableStateOf(mutableListOf<String>()) }
+    //Trips have pair of trip_id and service_id, service_id = 1,2,3,4.
+    // - service_id: 1 = Sunday, 2 = Friday, 3 = Monday-Friday, 4 = Saturday
+    val sundayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.sundayTripsPerRouteDirection0.collectAsState()
+    val fridayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.fridayTripsPerRouteDirection0.collectAsState()
+    val mondayToFridayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.mondayToFridayTripsPerRouteDirection0.collectAsState()
+    val saturdayTripsPerRouteDirection0: Map<String, MutableList<String>> by timetableViewModel.saturdayTripsPerRouteDirection0.collectAsState()
+
+    val sundayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.sundayTripsPerRouteDirection1.collectAsState()
+    val fridayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.fridayTripsPerRouteDirection1.collectAsState()
+    val mondayToFridayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.mondayToFridayTripsPerRouteDirection1.collectAsState()
+    val saturdayTripsPerRouteDirection1: Map<String, MutableList<String>> by timetableViewModel.saturdayTripsPerRouteDirection1.collectAsState()
+
+    val stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>> by timetableViewModel.stopTimesPerTrip.collectAsState()
+    val stopNamesPerTrip: Map<String, MutableList<String>> by timetableViewModel.stopNamesPerTrip.collectAsState()
+
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var selectedRouteName by rememberSaveable { mutableStateOf("")}
+    var selectedRouteId by rememberSaveable { mutableStateOf("") }
+    var selectedDay by rememberSaveable { mutableStateOf("") }
+    var zeroDirection by rememberSaveable { mutableStateOf(true) }
+    var headerList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
+    var dataList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
+    var numColumns by rememberSaveable { mutableIntStateOf(1) }
+    var numRows by rememberSaveable { mutableDoubleStateOf(1.0) }
+    var weekdayClicked by rememberSaveable { mutableStateOf(false) }
+    var saturdayClicked by rememberSaveable { mutableStateOf(false) }
+    var sundayClicked by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,9 +114,23 @@ fun ViewTimetables(
                                 onClick = {
                                     selectedRouteName = route[1] + " - " + route[2]
                                     selectedRouteId = route[0]
-                                    //TODO: Get weekday trip_id when file has been uploaded
-                                    headerList = stopNamesPerRoute[route[0]]!!
+
+                                    selectedDay = "3"
+                                    if (route[0] == "Oc_36_3") {
+                                        zeroDirection = false
+                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[route[0]]!!, stopNamesPerTrip)
+                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection1[route[0]]!!, stopTimesPerTrip)
+                                    } else {
+                                        zeroDirection = true
+                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
+                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopTimesPerTrip)
+                                    }
+
                                     expanded = false
+                                    weekdayClicked = true
+
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
                                 })
                         }
                     }
@@ -104,7 +139,92 @@ fun ViewTimetables(
                 Spacer(modifier = Modifier.size(20.dp))
 
                 Button(
-                    onClick = {}
+                    onClick = {
+                        if (selectedRouteId == "Oc_36_3") {
+                            selectedRouteId = "Oa_36_3"
+                            selectedRouteName = "Oa - Orbiter"
+                            when (selectedDay) {
+                                "1" -> {
+                                    headerList = findHeaderNames(sundayTripsPerRouteDirection0["Oa_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(sundayTripsPerRouteDirection0["Oa_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "2" -> {
+                                    headerList = findHeaderNames(fridayTripsPerRouteDirection0["Oa_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(fridayTripsPerRouteDirection0["Oa_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "3" -> {
+                                    headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0["Oa_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(mondayToFridayTripsPerRouteDirection0["Oa_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "4" -> {
+                                    headerList = findHeaderNames(saturdayTripsPerRouteDirection0["Oa_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(saturdayTripsPerRouteDirection0["Oa_36_3"]!!, stopTimesPerTrip)
+                                }
+                            }
+                        } else if (selectedRouteId == "Oa_36_3") {
+                            selectedRouteId = "Oc_36_3"
+                            selectedRouteName = "Oc - Orbiter"
+                            when (selectedDay) {
+                                "1" -> {
+                                    headerList = findHeaderNames(sundayTripsPerRouteDirection1["Oc_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(sundayTripsPerRouteDirection1["Oc_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "2" -> {
+                                    headerList = findHeaderNames(fridayTripsPerRouteDirection1["Oc_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(fridayTripsPerRouteDirection1["Oc_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "3" -> {
+                                    headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1["Oc_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(mondayToFridayTripsPerRouteDirection1["Oc_36_3"]!!, stopTimesPerTrip)
+                                }
+                                "4" -> {
+                                    headerList = findHeaderNames(saturdayTripsPerRouteDirection1["Oc_36_3"]!!, stopNamesPerTrip)
+                                    dataList = getDataList(saturdayTripsPerRouteDirection1["Oc_36_3"]!!, stopTimesPerTrip)
+                                }
+                            }
+                        } else if (selectedRouteId != "") {
+                            zeroDirection = !zeroDirection
+                            if (zeroDirection) {
+                                when (selectedDay) {
+                                    "1" -> {
+                                        headerList = findHeaderNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "2" -> {
+                                        headerList = findHeaderNames(fridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(fridayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "3" -> {
+                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "4" -> {
+                                        headerList = findHeaderNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                }
+                            } else {
+                                when (selectedDay) {
+                                    "1" -> {
+                                        headerList = findHeaderNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "2" -> {
+                                        headerList = findHeaderNames(fridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(fridayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "3" -> {
+                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                    "4" -> {
+                                        headerList = findHeaderNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                        dataList = getDataList(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 ) {
                     Text("View Other Direction", fontSize = 12.sp)
                 }
@@ -116,17 +236,86 @@ fun ViewTimetables(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Button(
-                        onClick = { selectedDay = "Weekday" }
+                        onClick = {
+                            if (selectedRouteId != "") {
+                                selectedDay = "3"
+                                if (zeroDirection) {
+                                    headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                } else {
+                                    headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                }
+                                saturdayClicked = false
+                                sundayClicked = false
+                                weekdayClicked = true
+                            }
+                        },
+                        colors = if (weekdayClicked) {
+                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                        } else {
+                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        }
                     ) {
                         Text("Weekday")
                     }
                     Button(
-                        onClick = { selectedDay = "Saturday" }
+                        onClick = {
+                            if (selectedRouteId != "") {
+                                selectedDay = "4"
+                                if (zeroDirection) {
+                                    headerList = findHeaderNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                } else {
+                                    headerList = findHeaderNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                }
+                                weekdayClicked = false
+                                sundayClicked = false
+                                saturdayClicked = true
+                            }
+                        },
+                        colors = if (saturdayClicked) {
+                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                        } else {
+                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        }
                     ) {
                         Text("Saturday")
                     }
                     Button(
-                        onClick = { selectedDay = "Sunday" }
+                        onClick = {
+                            if (selectedRouteId != "") {
+                                selectedDay = "1"
+                                if (zeroDirection) {
+                                    headerList = findHeaderNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                } else {
+                                    headerList = findHeaderNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                    dataList = getDataList(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                    numColumns = headerList.size
+                                    numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                }
+                                weekdayClicked = false
+                                saturdayClicked = false
+                                sundayClicked = true
+                            }
+                        },
+                        colors = if (sundayClicked) {
+                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                        } else {
+                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        }
                     ) {
                         Text("Sunday")
                     }
@@ -137,20 +326,6 @@ fun ViewTimetables(
             }
         }
 
-        //From routes.txt: Get route_id, route_short_name, route_long_name
-        //  - display route_short_name/route_long_name at the top of page
-        //From trips.csv: Get trip_id. direction_id
-        // - use direction_id to know which direction bus is, use in View Other Direction button
-        //From stop_times.csv: For trip_id get all stop_id's, arrival_time/departure_time
-        //  - display the arrival_time/departure_time in the table
-        //From stops.txt: For stop_id get stop_name
-        // - display the stop_name as the column headers
-
-        //TODO: Get the data from the stop_times/trips/stops files
-        //val headerList = stopNamesPerRoute[selectedRouteId]
-        val headerList2 = listOf("Eastgate Mall (Buckleys Rd)", "St Martins Shops", "Princess Margaret Hospital", "Barrington Mall (Barrington St)", "Westfield Riccarton", "Burnside High School", "Northlands Platform B", "The Palms(North Parade)", "Eastgate Mall (Buckleys Road)")
-        val dataList = listOf("12:30pm","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
-
         val columnHeaderModifier = Modifier
             .border(1.dp, Color.Black)
             .wrapContentSize()
@@ -160,18 +335,14 @@ fun ViewTimetables(
             .wrapContentSize()
             .padding(4.dp)
 
-        //TODO: Change value in here to num stops in route
-        val numColumns = 9
         item {
             LazyRow {
                 item {
-                    val size = headerList.size
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(numColumns),
-                        //Will need to change how height is set up later
                         modifier = Modifier
                             .width((numColumns * 128).dp)
-                            .height(((size) * 30).dp),
+                            .height((numRows * 40).dp),
                     ) {
                         items(headerList) {
                             Text(it, columnHeaderModifier, fontSize = 10.sp)
@@ -182,4 +353,55 @@ fun ViewTimetables(
             }
         }
     }
+}
+
+fun findHeaderNames(
+    busStopIdList: MutableList<String>,
+    stopNamesPerTrip: Map<String, MutableList<String>>
+): MutableList<String> {
+    var currentLongestList = mutableListOf<String>()
+    busStopIdList.forEach { id ->
+        val newList = stopNamesPerTrip[id]!!
+        if (newList.size > currentLongestList.size) {
+            currentLongestList = newList
+        }
+    }
+    return currentLongestList
+}
+
+fun findLongestStopSequence(
+    tripsPerRoute: MutableList<String>,
+    stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>>
+): List<String> {
+    var currentLongestList = listOf<String>()
+    tripsPerRoute.forEach { tripId ->
+        val stops = stopTimesPerTrip[tripId]!!
+        if (stops.size > currentLongestList.size) {
+            currentLongestList = stops.map { it.second }
+        }
+    }
+    return currentLongestList
+}
+
+fun getDataList(
+    tripsPerRoute: MutableList<String>,
+    stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>>
+): MutableList<String> {
+    val finalList = mutableListOf<String>()
+    val stopSequence = findLongestStopSequence(tripsPerRoute, stopTimesPerTrip)
+    tripsPerRoute.sortedBy {it.toInt()}.forEach { tripId ->
+        val stops = stopTimesPerTrip[tripId]!!
+        val currentStops = mutableListOf<String>()
+        var curIndex = 0
+        stopSequence.forEach { pair ->
+            if (curIndex < stops.size && stops[curIndex].second == pair) {
+                currentStops.add(stops[curIndex].first)
+                curIndex++
+            } else {
+                currentStops.add("")
+            }
+        }
+        finalList.addAll(currentStops)
+    }
+    return finalList
 }
