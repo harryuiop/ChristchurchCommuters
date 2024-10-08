@@ -1,7 +1,4 @@
 # seng303-as2-group-h
-
-
-
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
@@ -24,7 +21,7 @@ git push -uf origin main
 
 - [ ] [Set up project integrations](https://eng-git.canterbury.ac.nz/cwh74/seng303-as2-group-h/-/settings/integrations)
 
-## Collaborate with your team
+## [models](app%2Fsrc%2Fmain%2Fjava%2Fcom%2Fexample%2Fbusapp%2Fmodels)ollaborate with your team
 
 - [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
 - [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
