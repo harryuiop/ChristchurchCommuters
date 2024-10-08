@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -84,6 +83,10 @@ fun ViewTimetables(
     var dataList by rememberSaveable { mutableStateOf(mutableListOf<String>()) }
     var numColumns by rememberSaveable { mutableIntStateOf(1) }
     var numRows by rememberSaveable { mutableDoubleStateOf(1.0) }
+
+    var weekdayVisible by rememberSaveable { mutableStateOf(true) }
+    var saturdayVisible by rememberSaveable { mutableStateOf(true) }
+    var sundayVisible by rememberSaveable { mutableStateOf(true) }
     var weekdayClicked by rememberSaveable { mutableStateOf(false) }
     var saturdayClicked by rememberSaveable { mutableStateOf(false) }
     var sundayClicked by rememberSaveable { mutableStateOf(false) }
@@ -142,6 +145,16 @@ fun ViewTimetables(
                                             zeroDirection = true
                                             headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
                                             dataList = getDataList(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopTimesPerTrip)
+                                            if (!sundayTripsPerRouteDirection0.containsKey(route[0])) {
+                                                sundayVisible = false
+                                            } else {
+                                                sundayVisible = true
+                                            }
+                                            if (!saturdayTripsPerRouteDirection0.containsKey(route[0])) {
+                                                saturdayVisible = false
+                                            } else {
+                                                saturdayVisible = true
+                                            }
                                         }
                                         numColumns = headerList.size
                                         numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
@@ -254,101 +267,107 @@ fun ViewTimetables(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Button(
-                        onClick = {
-                            if (selectedRouteId != "") {
-                                progressVisible = true
-                                tableVisible = false
-                                selectedDay = "3"
-                                saturdayClicked = false
-                                sundayClicked = false
-                                weekdayClicked = true
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    if (zeroDirection) {
-                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
-                                    } else {
-                                        headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                    if (weekdayVisible) {
+                        Button(
+                            onClick = {
+                                if (selectedRouteId != "") {
+                                    progressVisible = true
+                                    tableVisible = false
+                                    selectedDay = "3"
+                                    saturdayClicked = false
+                                    sundayClicked = false
+                                    weekdayClicked = true
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        if (zeroDirection) {
+                                            headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(mondayToFridayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        } else {
+                                            headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(mondayToFridayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        }
                                     }
                                 }
+                            },
+                            colors = if (weekdayClicked) {
+                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                            } else {
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
                             }
-                        },
-                        colors = if (weekdayClicked) {
-                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
-                        } else {
-                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        ) {
+                            Text("Weekday")
                         }
-                    ) {
-                        Text("Weekday")
                     }
-                    Button(
-                        onClick = {
-                            if (selectedRouteId != "") {
-                                progressVisible = true
-                                tableVisible = false
-                                selectedDay = "4"
-                                weekdayClicked = false
-                                sundayClicked = false
-                                saturdayClicked = true
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    if (zeroDirection) {
-                                        headerList = findHeaderNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
-                                    } else {
-                                        headerList = findHeaderNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                    if (saturdayVisible) {
+                        Button(
+                            onClick = {
+                                if (selectedRouteId != "") {
+                                    progressVisible = true
+                                    tableVisible = false
+                                    selectedDay = "4"
+                                    weekdayClicked = false
+                                    sundayClicked = false
+                                    saturdayClicked = true
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        if (zeroDirection) {
+                                            headerList = findHeaderNames(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(saturdayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        } else {
+                                            headerList = findHeaderNames(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(saturdayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        }
                                     }
                                 }
+                            },
+                            colors = if (saturdayClicked) {
+                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                            } else {
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
                             }
-                        },
-                        colors = if (saturdayClicked) {
-                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
-                        } else {
-                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        ) {
+                            Text("Saturday")
                         }
-                    ) {
-                        Text("Saturday")
                     }
-                    Button(
-                        onClick = {
-                            if (selectedRouteId != "") {
-                                progressVisible = true
-                                tableVisible = false
-                                selectedDay = "1"
-                                weekdayClicked = false
-                                saturdayClicked = false
-                                sundayClicked = true
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    if (zeroDirection) {
-                                        headerList = findHeaderNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
-                                    } else {
-                                        headerList = findHeaderNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
-                                        dataList = getDataList(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
-                                        numColumns = headerList.size
-                                        numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                    if (sundayVisible) {
+                        Button(
+                            onClick = {
+                                if (selectedRouteId != "") {
+                                    progressVisible = true
+                                    tableVisible = false
+                                    selectedDay = "1"
+                                    weekdayClicked = false
+                                    saturdayClicked = false
+                                    sundayClicked = true
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        if (zeroDirection) {
+                                            headerList = findHeaderNames(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(sundayTripsPerRouteDirection0[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        } else {
+                                            headerList = findHeaderNames(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopNamesPerTrip)
+                                            dataList = getDataList(sundayTripsPerRouteDirection1[selectedRouteId]!!, stopTimesPerTrip)
+                                            numColumns = headerList.size
+                                            numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
+                                        }
                                     }
                                 }
+                            },
+                            colors = if (sundayClicked) {
+                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                            } else {
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
                             }
-                        },
-                        colors = if (sundayClicked) {
-                            ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
-                        } else {
-                            ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                        ) {
+                            Text("Sunday")
                         }
-                    ) {
-                        Text("Sunday")
                     }
                 }
 
@@ -379,6 +398,7 @@ fun ViewTimetables(
             .size(50.dp)
         val dataModifier = Modifier
             .border(1.dp, Color.Black)
+            .size(35.dp)
             .wrapContentSize()
             .padding(4.dp)
 
@@ -390,7 +410,8 @@ fun ViewTimetables(
                             columns = GridCells.Fixed(numColumns),
                             modifier = Modifier
                                 .width((numColumns * 128).dp)
-                                .height((numRows * 30 + numColumns * 50).dp),
+                                .height(((numRows-1) * 35 + 52).dp)
+                                .border(2.dp, Color.Black)
                         ) {
                             items(headerList) {
                                 Text(it, columnHeaderModifier, fontSize = 10.sp)
