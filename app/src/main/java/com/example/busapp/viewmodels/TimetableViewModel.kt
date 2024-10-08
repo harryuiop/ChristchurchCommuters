@@ -41,6 +41,18 @@ class TimetableViewModel() : ViewModel() {
         emptyMap())
     val stopNamesPerTrip: StateFlow<Map<String, MutableList<String>>> get() = _stopNamesPerTrip
 
+    private val _tripIdToHeadboard = MutableStateFlow<Map<String, String>>(
+        emptyMap())
+    val tripIdToHeadboard: StateFlow<Map<String, String>> get() = _tripIdToHeadboard
+
+    private val _tripIdToRouteId = MutableStateFlow<Map<String, String>>(
+        emptyMap())
+    val tripIdToRouteId: StateFlow<Map<String, String>> get() = _tripIdToRouteId
+
+    private val _tripIdToNameNumber = MutableStateFlow<Map<String, Pair<String, String>>>(
+        emptyMap())
+    val tripIdToNameNumber:  MutableStateFlow<Map<String, Pair<String, String>>> get() = _tripIdToNameNumber
+
     fun setData(fileData: FileData) {
         _routes.value = fileData.routes
         _sundayTripsPerRouteDirection0.value = fileData.sundayTripsPerRouteDirection0
@@ -51,6 +63,9 @@ class TimetableViewModel() : ViewModel() {
         _fridayTripsPerRouteDirection1.value = fileData.fridayTripsPerRouteDirection1
         _mondayToFridayTripsPerRouteDirection1.value = fileData.mondayToFridayTripsPerRouteDirection1
         _saturdayTripsPerRouteDirection1.value = fileData.saturdayTripsPerRouteDirection1
+        _tripIdToHeadboard.value = fileData.tripIdToHeadboard
+        _tripIdToRouteId.value = fileData.tripIdToRouteId
+        _tripIdToNameNumber.value = fileData.tripIdToNameNumber
         _stopTimesPerTrip.value = fileData.stopTimesPerTrip
         _stopNamesPerTrip.value = fileData.stopNamesPerTrip
     }

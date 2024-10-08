@@ -31,6 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,12 +55,17 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.time.Duration.Companion.hours
+
 
 class MainActivity : ComponentActivity() {
 
@@ -105,7 +112,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "19428")
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "23940")
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -137,21 +144,9 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
 
-    feed.tripUpdates.forEach {
-        it.stopTimeUpdates.forEach{
-            println(it)
-        }
-    }
-
     val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> = getRelevantTripUpdates(
                                                                 gftsRealTimeViewModel.feed.value,
                                                                 stopId)
-
-    LaunchedEffect(feed) {
-        Log.d("Home", "Feed updated: ${feed.tripUpdates.size} trip updates")
-        Log.d("Home", "Relevant trip updates: ${tripUpdatesContainingStopId.size}")
-        println(tripUpdatesContainingStopId)
-    }
 
     Column(
         modifier = Modifier
@@ -163,7 +158,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = "Upcoming", fontSize = 12.sp)
+        Text(text = "Upcoming - Last updated ${formatTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
 
         LazyColumn(
             modifier = Modifier
@@ -178,12 +173,13 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Trip ID: ${tripUpdate.first.tripId}")
-                        Text("Expected Arrival: ${tripUpdate.second.arrival?.time}")
-                        Text("Expected Departure: ${tripUpdate.second.departure?.time}")
+                        Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.second} " +
+                                  "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.first}",
+                                    fontWeight = FontWeight.Bold, fontSize = 20.sp )
+                        Text("")
+                        Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
+                        Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
                         Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
-                        Text("Stops: ${tripUpdate.first.stopTimeUpdates.size}")
-                        Text("Lasted Updated: ${refreshedData.lastUpdated}")
                     }
                 }
             }
@@ -243,9 +239,18 @@ fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<Tr
     return relevantTrips
 }
 
+fun formatTime(date: Date?): String {
+    if (date == null) return "N/A"
+    val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+    return sdf.format(date)
+}
+
 suspend fun readFiles(context: Context) = coroutineScope {
     val routes = mutableListOf<List<String>>()
     val stopTimesPerTrip = HashMap<String, MutableList<Pair<String, String>>>()
+    val tripIdToHeadboard = HashMap<String, String>()
+    val tripIdToRouteID = HashMap<String, String>()
+    val tripIdToNameNumber =  HashMap<String, Pair<String, String>>()
     val stopsHashMap = HashMap<String, String>()
 
     val sundayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
@@ -266,8 +271,12 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while (reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
+                val tripId = listLine[0]
+                val shortName = listLine[3]
+                val number = listLine[2]
                 //Adding route_id, route_short_name, route_long_name
                 routes.add(listOf(listLine[0], listLine[2], listLine[3]))
+                tripIdToNameNumber[tripId] = Pair(shortName, number)
             }
             counter++
         }
@@ -276,6 +285,9 @@ suspend fun readFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
+                val id = listLine[2]
+                val headboard = listLine[3]
+                val routeId = listLine[0]
                 val direction = listLine[5]
                 if (direction == "0") {
                     when (listLine[1]) {
@@ -292,6 +304,8 @@ suspend fun readFiles(context: Context) = coroutineScope {
                         "4" -> addToMap(saturdayTripsPerRouteDirection1, listLine)
                     }
                 }
+                tripIdToHeadboard[id] = headboard
+                tripIdToRouteID[id] = routeId
             }
             counter++
         }
@@ -346,7 +360,22 @@ suspend fun readFiles(context: Context) = coroutineScope {
         stopNamesPerTrip[key] = stopNamesList
     }
 
-    return@coroutineScope FileData(routes, sundayTripsPerRouteDirection0, fridayTripsPerRouteDirection0, mondayToFridayTripsPerRouteDirection0, saturdayTripsPerRouteDirection0, sundayTripsPerRouteDirection1, fridayTripsPerRouteDirection1, mondayToFridayTripsPerRouteDirection1, saturdayTripsPerRouteDirection1, stopTimesPerTrip, stopNamesPerTrip)
+    return@coroutineScope FileData(
+                                routes,
+                                sundayTripsPerRouteDirection0,
+                                fridayTripsPerRouteDirection0,
+                                mondayToFridayTripsPerRouteDirection0,
+                                saturdayTripsPerRouteDirection0,
+                                sundayTripsPerRouteDirection1,
+                                fridayTripsPerRouteDirection1,
+                                mondayToFridayTripsPerRouteDirection1,
+                                saturdayTripsPerRouteDirection1,
+                                tripIdToHeadboard,
+                                tripIdToRouteID,
+                                tripIdToNameNumber,
+                                stopTimesPerTrip,
+                                stopNamesPerTrip
+                                )
 }
 
 fun addToMap(
