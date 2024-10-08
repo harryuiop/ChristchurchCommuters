@@ -11,16 +11,15 @@ import java.io.InputStreamReader
 suspend fun readMetroFiles(context: Context) = coroutineScope {
     val routes = mutableListOf<List<String>>()
     val stopTimesPerTrip = HashMap<String, MutableList<Pair<String, String>>>()
+    val tripIdToHeadboard = HashMap<String, String>()
+    val tripIdToRouteId = HashMap<String, String>()
+    val tripIdToNameNumber =  HashMap<String, Pair<String, String>>()
     val stopsHashMap = HashMap<String, String>()
 
     val sundayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val fridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val mondayToFridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val saturdayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
-
-    val tripIdToHeadboard = HashMap<String, String>()
-    val tripIdToRouteID = HashMap<String, String>()
-    val tripIdToNameNumber =  HashMap<String, Pair<String, String>>()
 
     val sundayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
     val fridayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
@@ -35,8 +34,12 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         while (reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
+                val tripId = listLine[0]
+                val shortName = listLine[3]
+                val number = listLine[2]
                 //Adding route_id, route_short_name, route_long_name
                 routes.add(listOf(listLine[0], listLine[2], listLine[3]))
+                tripIdToNameNumber[tripId] = Pair(shortName, number)
             }
             counter++
         }
@@ -45,6 +48,9 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         while(reader.readLine().also { line = it } != null) {
             if (counter > 0) {
                 val listLine = line!!.split(",")
+                val id = listLine[2]
+                val headboard = listLine[3]
+                val routeId = listLine[0]
                 val direction = listLine[5]
                 if (direction == "0") {
                     when (listLine[1]) {
@@ -61,6 +67,8 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
                         "4" -> addToMap(saturdayTripsPerRouteDirection1, listLine)
                     }
                 }
+                tripIdToHeadboard[id] = headboard
+                tripIdToRouteId[id] = routeId
             }
             counter++
         }
@@ -100,6 +108,7 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         Log.e("Reading Metro Files","Error: ${e.message}")
     } finally {
         try {
+            println(stopsHashMap)
             reader?.close()
         } catch (e: Exception) {
             Log.e("Reading Metro Files","Error: ${e.message}")
@@ -128,7 +137,8 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         tripIdToRouteId,
         tripIdToNameNumber,
         stopTimesPerTrip,
-        stopNamesPerTrip)
+        stopNamesPerTrip
+    )
 }
 
 fun addToMap(
