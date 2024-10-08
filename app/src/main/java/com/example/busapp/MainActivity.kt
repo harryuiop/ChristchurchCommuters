@@ -30,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.FileData
 import com.example.busapp.models.GtfsRealtimeFeed
+import com.example.busapp.models.StopTimeUpdate
 import com.example.busapp.models.TripUpdate
 import com.example.busapp.screens.ViewTimetables
 import com.example.busapp.services.MetroApiService
@@ -89,7 +90,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope)
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "19428")
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -113,10 +114,29 @@ class MainActivity : ComponentActivity() {
 fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel,
                                         timetableViewModel: TimetableViewModel,
                                         metroApiService: MetroApiService,
-                                        lifecycleScope: kotlinx.coroutines.CoroutineScope) {
+                                        lifecycleScope: kotlinx.coroutines.CoroutineScope,
+                                        stopId: String) {
+    val feed by gftsRealTimeViewModel.feed.collectAsState()
+
     var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
+
+    feed.tripUpdates.forEach {
+        it.stopTimeUpdates.forEach{
+            println(it)
+        }
+    }
+
+    val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> = getRelevantTripUpdates(
+                                                                gftsRealTimeViewModel.feed.value,
+                                                                stopId)
+
+    LaunchedEffect(feed) {
+        Log.d("Home", "Feed updated: ${feed.tripUpdates.size} trip updates")
+        Log.d("Home", "Relevant trip updates: ${tripUpdatesContainingStopId.size}")
+        println(tripUpdatesContainingStopId)
+    }
 
     Column(
         modifier = Modifier
@@ -135,7 +155,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(refreshedData.tripUpdates) { tripUpdate ->
+            items(tripUpdatesContainingStopId) { tripUpdate ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -143,10 +163,11 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Trip ID: ${timetableViewModel.stopNamesPerTrip.value[tripUpdate.tripId]}")
-                        Text("Expected: ${timetableViewModel.stopTimesPerTrip.value[tripUpdate.tripId]}")
-                        Text("Schedule: ${tripUpdate.scheduleRelationship}")
-                        Text("Stops: ${tripUpdate.stopTimeUpdates.size}")
+                        Text("Trip ID: ${tripUpdate.first.tripId}")
+                        Text("Expected Arrival: ${tripUpdate.second.arrival?.time}")
+                        Text("Expected Departure: ${tripUpdate.second.departure?.time}")
+                        Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
+                        Text("Stops: ${tripUpdate.first.stopTimeUpdates.size}")
                         Text("Lasted Updated: ${refreshedData.lastUpdated}")
                     }
                 }
@@ -182,6 +203,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
             Button(onClick = {
                 lifecycleScope.launch {
                     val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                    Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
                     gftsRealTimeViewModel.setData(liveData)
                     refreshedData = liveData
                 }
@@ -192,6 +214,18 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
 
         Spacer(modifier = Modifier.size(12.dp))
     }
+}
+
+fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<TripUpdate, StopTimeUpdate>> {
+    var relevantTrips: List<Pair<TripUpdate, StopTimeUpdate>> = emptyList()
+    feed.tripUpdates.forEach { trip ->
+        trip.stopTimeUpdates.forEach { stop ->
+            if (stop.stopId == stopId) {
+                relevantTrips = relevantTrips + Pair(trip, stop)
+            }
+        }
+    }
+    return relevantTrips
 }
 
 suspend fun readFiles(context: Context) = coroutineScope {
