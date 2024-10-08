@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -28,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -40,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -47,6 +50,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.busapp.viewmodels.RouteFinderViewModel
 import com.google.android.libraries.places.api.model.AutocompletePrediction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -55,6 +61,9 @@ import java.util.Locale
 @Composable
 fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
     var showDialog by remember { mutableStateOf(false) }
+    var transitRoutes by remember {
+        mutableStateOf("")
+    }
 
     Column (
         modifier = Modifier
@@ -114,7 +123,29 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
         Spacer(modifier = Modifier.size(24.dp))
 
         Text(text = "Upcoming", fontSize = 12.sp)
+
+        Button(
+            onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    transitRoutes = routeFinderViewModel.getRoutes().toString()
+                }
+            }
+        ) {
+            Text(text = "Submit")
+        }
+
+        Spacer(modifier = Modifier.size(24.dp))
+
+        TextField(
+            value = transitRoutes,
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth())
     }
+}
+
+fun Routes(routeFinderViewModel: RouteFinderViewModel) {
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,6 +157,7 @@ fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLoca
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth()
     ) {
         val currentLocation = if (isStartLocation) {
             routeFinderViewModel.startLocation
@@ -148,7 +180,8 @@ fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLoca
                 }
             },
             modifier = Modifier
-                .menuAnchor(),
+                .menuAnchor()
+                .fillMaxWidth(),
             label = {
                 if (isStartLocation) {
                     Text("Choose start location")
@@ -162,13 +195,15 @@ fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLoca
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.heightIn(max = 150.dp)
+            modifier = Modifier
+                .heightIn(max = 150.dp)
+                .fillMaxWidth()
         ) {
             predictions.forEach { prediction ->
-                val predictionText = prediction.getPrimaryText(null).toString()
+                val predictionText = prediction.getFullText(null).toString()
 
                 DropdownMenuItem(
-                    text = { Text(predictionText, style = MaterialTheme.typography.bodyLarge) },
+                    text = { Text(predictionText, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     onClick = {
                         if (isStartLocation) {
                             routeFinderViewModel.updateStartLocation(predictionText)
@@ -178,6 +213,7 @@ fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLoca
 
                         expanded = false
                     },
+                    modifier = Modifier.fillMaxWidth(),
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                 )
             }

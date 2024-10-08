@@ -2,6 +2,8 @@ package com.example.busapp.places
 
 import android.util.Log
 import com.example.busapp.BuildConfig
+import com.example.busapp.routes.RoutesRepository
+import com.example.busapp.routes.RoutesRepositoryImpl
 import com.example.busapp.viewmodels.RouteFinderViewModel
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -31,7 +33,11 @@ val placesModule = module {
         PlacesRepositoryImpl(get())
     }
 
+    single<RoutesRepository> {
+        RoutesRepositoryImpl()
+    }
+
     viewModel {
-        RouteFinderViewModel(get())
+        RouteFinderViewModel(get(), get())
     }
 }

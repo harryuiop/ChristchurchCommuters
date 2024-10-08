@@ -1,4 +1,4 @@
-package com.example.busapp.services
+package com.example.busapp.routes
 
 import android.util.Log
 import com.example.busapp.BuildConfig
@@ -6,16 +6,20 @@ import com.example.busapp.models.Destination
 import com.example.busapp.models.Origin
 import com.example.busapp.models.TransitPreferences
 import com.example.busapp.models.TransitRouteRequest
+import com.example.busapp.models.TransitRoutesResponse
 import com.google.gson.Gson
-import java.io.IOException
 import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class RoutesApiService {
+class RoutesRepositoryImpl: RoutesRepository {
     private val gson = Gson()
 
-    fun computeRoutes(startLocation: String, destination: String, departureTime: String): String? {
+    override fun getRoutes(
+        startLocation: String,
+        destination: String,
+        departureTime: String
+    ): TransitRoutesResponse {
         val apiKey = BuildConfig.MAPS_API_KEY
         val urlString = BuildConfig.ROUTES_API_URL
         val url = URL(urlString)
@@ -54,15 +58,24 @@ class RoutesApiService {
             Log.i("RoutesAPI", "Response code: $status")
 
             if (status == HttpURLConnection.HTTP_OK) {
-                connection.inputStream.bufferedReader().use { it.readText() }
+                println(transitRouteRequest)
+                connection.inputStream.bufferedReader().use {
+                    parseResponse(it.readText())
+                }
             } else {
-                throw IOException("HTTP error code: $status")
+                Log.e("RoutesAPI", "HTTP error code: $status")
+                TransitRoutesResponse(emptyList())
             }
 
         } catch (e: Exception) {
-            throw IOException("Error: ${e.message}")
+            Log.e("RoutesAPI", "Error: ${e.message}")
+            TransitRoutesResponse(emptyList())
         } finally {
             connection?.disconnect()
         }
+    }
+
+    override fun parseResponse(response: String): TransitRoutesResponse {
+        return gson.fromJson(response, TransitRoutesResponse::class.java)
     }
 }
