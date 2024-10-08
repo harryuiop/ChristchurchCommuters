@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
+
 
 class BusStopViewModel(
     private val busStopStorage: Storage<BusStop>
@@ -33,4 +35,13 @@ class BusStopViewModel(
             _selectedBusStop.value = null
         }
     }
+
+    fun addBusStop(busStop: BusStop) = viewModelScope.launch {
+        busStopStorage.insert(busStop).catch { e ->
+            Log.e("BUS_STOP_VIEW_MODEL", "Error inserting bus stop: ${e.message}", e) }
+            .collect()
+        busStopStorage.getAll().catch { Log.e("BUS_STOP_VIEW_MODEL", it.toString()) }
+            .collect { _busStops.emit(it) }
+    }
 }
+

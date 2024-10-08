@@ -14,5 +14,6 @@ data class FileData(
     val tripIdToRouteId: Map<String, String>,
     val tripIdToNameNumber: Map<String, Pair<String, String>>,
     val stopTimesPerTrip: Map<String, MutableList<Pair<String, String>>>,
-    val stopNamesPerTrip: Map<String, MutableList<String>>
+    val stopNamesPerTrip: Map<String, MutableList<String>>,
+    val stopsHashMap: Map<String, String>
 )

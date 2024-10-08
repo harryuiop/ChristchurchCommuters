@@ -33,7 +33,7 @@ fun AddBusStop(
     addBusStopViewModel: AddBusStopViewModel,
     navController: NavController
 ) {
-    addBusStopViewModel.getUserBusStops()
+    addBusStopViewModel.getBusStops()
 
     Column(
         modifier = Modifier
@@ -63,11 +63,11 @@ fun AddBusStop(
                 .padding(bottom = 16.dp)
         ) {
             itemsIndexed(addBusStopViewModel.busStops) { index, busStop ->
-                if (busStop.stopName.contains(addBusStopViewModel.userQuery, ignoreCase = true)) {
+                if (busStop.last().stopName.contains(addBusStopViewModel.userQuery, ignoreCase = true)) {
                     OutlinedCard(
                         onClick = {
-                            Log.d("BusStop", busStop.stopName);
-                            addBusStopViewModel.updateSelectedBusStop(busStop.stopId);
+                            Log.d("BusStop", busStop.last().stopName);
+                            addBusStopViewModel.updateSelectedBusStop(busStop.last().id);
                             Log.d("BusStop", addBusStopViewModel.selectedBusStop.toString());
                         },
                         modifier = Modifier
@@ -75,7 +75,7 @@ fun AddBusStop(
                             .padding(8.dp)
 
                     ) {
-                        Text(text = busStop.stopName, modifier = Modifier.padding(8.dp))
+                        Text(text = busStop.last().stopName, modifier = Modifier.padding(8.dp))
                     }
                 }
             }

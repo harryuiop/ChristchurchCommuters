@@ -48,15 +48,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.busapp.models.BusStop
 import com.example.busapp.models.FileData
 import com.example.busapp.models.GtfsRealtimeFeed
 import com.example.busapp.models.StopTimeUpdate
 import com.example.busapp.models.TripUpdate
+import com.example.busapp.screens.AddBusStop
 import com.example.busapp.screens.ViewTimetables
 import com.example.busapp.services.readMetroFiles
 import com.example.busapp.services.MetroApiService
 import com.example.busapp.ui.theme.BusAppTheme
 import com.example.busapp.viewmodels.AddBusStopViewModel
+import com.example.busapp.viewmodels.BusStopViewModel
 import com.example.busapp.viewmodels.GtfsRealTimeViewModel
 import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -64,6 +67,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -86,18 +91,29 @@ class MainActivity : ComponentActivity() {
         setContent {
             val timetableViewModel: TimetableViewModel = viewModel()
             val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
+            val busStopViewModel: BusStopViewModel by koinViewModel()
 
             val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
 
             CoroutineScope(Dispatchers.IO).launch {
                 val fileData = readMetroFiles(this@MainActivity)
                 timetableViewModel.setData(fileData)
+
+                busStopViewModel.getAllBusStops()
+                if (busStopViewModel.busStops.value.isEmpty()) {
+                    fileData.stopsHashMap.forEach { (key, value) ->
+                        busStopViewModel.addBusStop(BusStop(key.toInt(), value))
+                    }
+                }
+                addBusStopViewModel.setBusStops(busStopViewModel.busStops.first())
             }
 
             CoroutineScope(Dispatchers.IO).launch {
                 val lifeData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
                 gftsRealTimeViewModel.setData(lifeData)
             }
+
+
 
             BusAppTheme {
                 val navController = rememberNavController()
@@ -128,7 +144,7 @@ class MainActivity : ComponentActivity() {
                                 RouteFinder(navController = navController)
                             }
                             composable("AddStop") {
-                                //AddBusStop(navController = navController)
+                                AddBusStop(navController = navController, addBusStopViewModel = addBusStopViewModel)
                             }
                         }
                     }

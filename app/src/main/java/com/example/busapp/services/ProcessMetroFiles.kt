@@ -16,6 +16,7 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
     val tripIdToNameNumber =  HashMap<String, Pair<String, String>>()
     val stopsHashMap = HashMap<String, String>()
 
+
     val sundayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val fridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val mondayToFridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
@@ -123,6 +124,7 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         stopNamesPerTrip[key] = stopNamesList
     }
 
+
     return@coroutineScope FileData(
         routes,
         sundayTripsPerRouteDirection0,
@@ -137,7 +139,8 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
         tripIdToRouteId,
         tripIdToNameNumber,
         stopTimesPerTrip,
-        stopNamesPerTrip
+        stopNamesPerTrip,
+        stopsHashMap
     )
 }
 
