@@ -54,11 +54,12 @@ class RoutesRepositoryImpl: RoutesRepository {
             outputStream.flush()
             outputStream.close()
 
+            println(transitRouteRequest)
+
             val status = connection.responseCode
             Log.i("RoutesAPI", "Response code: $status")
 
             if (status == HttpURLConnection.HTTP_OK) {
-                println(transitRouteRequest)
                 connection.inputStream.bufferedReader().use {
                     parseResponse(it.readText())
                 }

@@ -1,4 +1,5 @@
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,15 +17,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,9 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -61,9 +58,9 @@ import java.util.Locale
 @Composable
 fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
     var showDialog by remember { mutableStateOf(false) }
-    var transitRoutes by remember {
-        mutableStateOf("")
-    }
+    var transitRoutes by remember { mutableStateOf("") }
+    var startPredictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    var destinationPredictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
 
     Column (
         modifier = Modifier
@@ -76,18 +73,40 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 
         Spacer(modifier = Modifier.size(24.dp))
 
-        LocationDropdownMenu(routeFinderViewModel, true)
+        LocationSearchBar(
+            onClearQuery = { routeFinderViewModel.updateStartLocation("") },
+            predictions = startPredictions,
+            onQueryChange = {
+                routeFinderViewModel.findAutocompletePredictions(it) {
+                    result ->
+                    startPredictions = result
+                }
+            },
+            placeholderText = "Start start location",
+            onSelectPrediction = { routeFinderViewModel.updateStartLocation(it) }
+        )
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        LocationDropdownMenu(routeFinderViewModel, false)
+        LocationSearchBar(
+            onClearQuery = { routeFinderViewModel.updateDestination("") },
+            predictions = destinationPredictions,
+            onQueryChange = {
+                routeFinderViewModel.findAutocompletePredictions(it) {
+                        result ->
+                    destinationPredictions = result
+                }
+            },
+            placeholderText = "Start destination",
+            onSelectPrediction = { routeFinderViewModel.updateDestination(it) }
+        )
 
         Spacer(modifier = Modifier.size(12.dp))
 
         Row(
             modifier = Modifier
                 .align(alignment = Alignment.CenterHorizontally)
-                .padding(horizontal = 20.dp)
+                .fillMaxWidth()
         ) {
             OutlinedButton(
                 onClick = {
@@ -96,9 +115,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                         else
                             routeFinderViewModel.updateTravelTimeOption("Arrive by")
               },
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .width(125.dp)
+                modifier = Modifier.width(125.dp)
             ) {
                 Text(routeFinderViewModel.travelTimeOption)
             }
@@ -106,9 +123,24 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
 
             OutlinedButton(
+                modifier = Modifier .padding(horizontal = 6.dp),
                 onClick = { showDialog = true }
             ) {
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
+            }
+
+            Button(
+                onClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        transitRoutes = routeFinderViewModel.getRoutes().toString()
+                        println(transitRoutes)
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Submit Icon"
+                )
             }
         }
 
@@ -124,23 +156,14 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 
         Text(text = "Upcoming", fontSize = 12.sp)
 
-        Button(
-            onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    transitRoutes = routeFinderViewModel.getRoutes().toString()
-                }
-            }
-        ) {
-            Text(text = "Submit")
-        }
-
         Spacer(modifier = Modifier.size(24.dp))
 
         TextField(
             value = transitRoutes,
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier.fillMaxWidth())
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -150,72 +173,71 @@ fun Routes(routeFinderViewModel: RouteFinderViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationDropdownMenu(routeFinderViewModel: RouteFinderViewModel, isStartLocation: Boolean) {
-    var expanded by remember { mutableStateOf(false) }
-    var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+fun LocationSearchBar(
+    onClearQuery: () -> Unit,
+    predictions: List<AutocompletePrediction>,
+    onQueryChange: (String) -> Unit,
+    placeholderText: String,
+    onSelectPrediction: (String) -> Unit
+) {
+    var active by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        val currentLocation = if (isStartLocation) {
-            routeFinderViewModel.startLocation
-        } else {
-            routeFinderViewModel.destination
-        }
-
-        OutlinedTextField(
-            value = TextFieldValue(currentLocation, selection = TextRange(currentLocation.length)),
-            onValueChange = { location ->
-                if (isStartLocation) {
-                    routeFinderViewModel.updateStartLocation(location.text)
-                } else {
-                    routeFinderViewModel.updateDestination(location.text)
-                }
-
-                routeFinderViewModel.findAutocompletePredictions(location.text) { result ->
-                    predictions = result
-                    expanded = predictions.isNotEmpty()
-                }
-            },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
-            label = {
-                if (isStartLocation) {
-                    Text("Choose start location")
-                } else {
-                    Text("Choose destination")
-                }
-            },
-            singleLine = true
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .heightIn(max = 150.dp)
-                .fillMaxWidth()
-        ) {
-            predictions.forEach { prediction ->
-                val predictionText = prediction.getFullText(null).toString()
-
-                DropdownMenuItem(
-                    text = { Text(predictionText, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    onClick = {
-                        if (isStartLocation) {
-                            routeFinderViewModel.updateStartLocation(predictionText)
+    DockedSearchBar(
+        modifier = Modifier.fillMaxWidth(),
+        query = query,
+        onQueryChange = {
+            query = it
+            if (it.isEmpty()) {
+                query = ""
+            }
+            onQueryChange(it)
+        },
+        onSearch = {
+            active = false
+        },
+        active = active,
+        onActiveChange = {
+            active = it
+        },
+        placeholder = {
+            Text(text = placeholderText)
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null
+            )
+        },
+        trailingIcon = {
+            if(active) {
+                Icon(
+                    modifier = Modifier.clickable {
+                        if (query.isNotEmpty()) {
+                            query = ""
+                            onClearQuery()
                         } else {
-                            routeFinderViewModel.updateDestination(predictionText)
+                            active = false
                         }
-
-                        expanded = false
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close Icon"
                 )
+            }
+        }
+    ) {
+        predictions.forEach { prediction ->
+            val predictionText = prediction.getFullText(null).toString()
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .clickable {
+                        query = predictionText
+                        onSelectPrediction(predictionText)
+                        active = false
+                    }
+            ) {
+                Text(text = predictionText)
             }
         }
     }
