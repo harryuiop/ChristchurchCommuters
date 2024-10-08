@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.launch
+import java.util.Date
+import kotlin.time.Duration.Companion.hours
 
 class MainActivity : ComponentActivity() {
 
@@ -87,7 +89,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope)
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope)
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -108,8 +110,13 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel, metroApiService: MetroApiService, lifecycleScope: kotlinx.coroutines.CoroutineScope) {
-    var refreshedData by remember { mutableStateOf(emptyList<TripUpdate>()) }
+fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel,
+                                        timetableViewModel: TimetableViewModel,
+                                        metroApiService: MetroApiService,
+                                        lifecycleScope: kotlinx.coroutines.CoroutineScope) {
+    var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
+        lastUpdated = Date(0),
+        tripUpdates = emptyList())) }
 
     Column(
         modifier = Modifier
@@ -128,7 +135,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(refreshedData) { tripUpdate ->
+            items(refreshedData.tripUpdates) { tripUpdate ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -136,10 +143,11 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Trip ID: ${tripUpdate.tripId}")
-                        Text("Route ID: ${tripUpdate.routeId}")
+                        Text("Trip ID: ${timetableViewModel.stopNamesPerTrip.value[tripUpdate.tripId]}")
+                        Text("Expected: ${timetableViewModel.stopTimesPerTrip.value[tripUpdate.tripId]}")
                         Text("Schedule: ${tripUpdate.scheduleRelationship}")
                         Text("Stops: ${tripUpdate.stopTimeUpdates.size}")
+                        Text("Lasted Updated: ${refreshedData.lastUpdated}")
                     }
                 }
             }
@@ -175,7 +183,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                 lifecycleScope.launch {
                     val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
                     gftsRealTimeViewModel.setData(liveData)
-                    refreshedData = liveData.tripUpdates
+                    refreshedData = liveData
                 }
             }) {
                 Text(text = "Refresh Data")
@@ -274,6 +282,7 @@ suspend fun readFiles(context: Context) = coroutineScope {
         Log.e("Reading Metro Files","Error: ${e.message}")
     } finally {
         try {
+            println(stopsHashMap)
             reader?.close()
         } catch (e: Exception) {
             Log.e("Reading Metro Files","Error: ${e.message}")
