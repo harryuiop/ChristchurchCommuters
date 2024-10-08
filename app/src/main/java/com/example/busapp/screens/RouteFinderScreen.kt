@@ -173,9 +173,7 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
 
     Column {
         transitRoutesResponse.routes.forEachIndexed() { index, route ->
-//            item {
                 RouteCard(index, route)
-//            }
         }
     }
 }
@@ -183,6 +181,9 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
 @Composable
 fun RouteCard(index: Int, route: Route) {
     Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
