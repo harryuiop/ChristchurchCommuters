@@ -18,6 +18,10 @@ suspend fun readMetroFiles(context: Context) = coroutineScope {
     val mondayToFridayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
     val saturdayTripsPerRouteDirection0 = HashMap<String, MutableList<String>>()
 
+    val tripIdToHeadboard = HashMap<String, String>()
+    val tripIdToRouteID = HashMap<String, String>()
+    val tripIdToNameNumber =  HashMap<String, Pair<String, String>>()
+
     val sundayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
     val fridayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
     val mondayToFridayTripsPerRouteDirection1 = HashMap<String, MutableList<String>>()
