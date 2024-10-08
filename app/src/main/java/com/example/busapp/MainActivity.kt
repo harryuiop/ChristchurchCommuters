@@ -35,14 +35,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.FileData
 import com.example.busapp.screens.ViewTimetables
-import com.example.busapp.screens.AddBusStop
+import com.example.busapp.services.readMetroFiles
 import com.example.busapp.ui.theme.BusAppTheme
+import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,9 +52,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import com.example.busapp.viewmodels.AddBusStopViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
-
 
 class MainActivity : ComponentActivity() {
 
@@ -62,9 +61,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val timetableViewModel: TimetableViewModel by koinViewModel()
+            val timetableViewModel: TimetableViewModel = viewModel()
             CoroutineScope(Dispatchers.IO).launch {
-                val fileData = readFiles(this@MainActivity)
+                val fileData = readMetroFiles(this@MainActivity)
                 timetableViewModel.setData(fileData)
             }
             BusAppTheme {
@@ -93,7 +92,7 @@ class MainActivity : ComponentActivity() {
                                 Home(navController = navController)
                             }
                             composable("Timetables") {
-                                //ViewTimetables(navController = navController)
+                                ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
                             }
                             composable("RouteFinder") {
                                 //FindRoute(navController = navController)
