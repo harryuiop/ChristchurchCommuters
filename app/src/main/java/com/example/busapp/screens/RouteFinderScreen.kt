@@ -173,14 +173,16 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
     }
 
     LazyColumn {
-        items(transitRoutesResponse.routes) { route ->
-            RouteCard(route)
+        transitRoutesResponse.routes.forEachIndexed() { index, route ->
+            item {
+                RouteCard(index, route)
+            }
         }
     }
 }
 
 @Composable
-fun RouteCard(route: Route) {
+fun RouteCard(index: Int, route: Route) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,6 +190,7 @@ fun RouteCard(route: Route) {
         elevation = CardDefaults.elevatedCardElevation()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Text("Option ${index + 1}", modifier = Modifier.align(Alignment.CenterHorizontally))
             route.legs.forEach { leg ->
                 LegView(leg)
             }
@@ -222,7 +225,7 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus arrives at:", color = Color.Black)
+        Text(text = "The bus departs at:", color = Color.Black)
         Text(text = transitDetails.localizedValues.departureTime.time.text)
 
         Spacer(modifier = Modifier.size(12.dp))
@@ -232,7 +235,7 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Arrive at:", color = Color.Black)
+        Text(text = "The bus arrives at:", color = Color.Black)
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
 
         Spacer(modifier = Modifier.size(6.dp))
