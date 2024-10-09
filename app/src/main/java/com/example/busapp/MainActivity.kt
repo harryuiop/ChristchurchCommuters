@@ -111,9 +111,6 @@ class MainActivity : ComponentActivity() {
             }
 
 
-
-
-
             BusAppTheme {
                 val navController = rememberNavController()
                 Scaffold(
@@ -186,7 +183,7 @@ fun Home(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
 
-    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>(emptyList()) }
+    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>>(emptyList()) }
 
 
     if(isLoading) {
@@ -250,8 +247,6 @@ fun Home(
 
 
                 Spacer(modifier = Modifier.size(12.dp))
-            } else {
-                Text("Test")
             }
 
             Button(
@@ -261,7 +256,7 @@ fun Home(
                     .border(8.dp, Color.White, shape = RectangleShape),
                 colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
             ) {
-                Text("Add Bus Stop")
+                Text(if (user!!.selectedStop.id == -1) "Add Bus Stop" else "Change Bus Stop")
             }
 
 
@@ -298,8 +293,8 @@ fun Home(
 
 }
 
-fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<TripUpdate, StopTimeUpdate>> {
-    var relevantTrips: List<Pair<TripUpdate, StopTimeUpdate>> = emptyList()
+fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<LiveBusViaStop> {
+    var relevantTrips: List<LiveBusViaStop> = emptyList()
     feed.tripUpdates.forEach { trip ->
         trip.stopTimeUpdates.forEach { stop ->
             if (stop.stopId == stopId) {
@@ -309,6 +304,7 @@ fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<Tr
     }
     return relevantTrips
 }
+
 
 @SuppressLint("DefaultLocale")
 fun arrivalIn(date: Date?): String {
