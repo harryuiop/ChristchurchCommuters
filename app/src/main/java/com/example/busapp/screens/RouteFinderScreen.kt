@@ -128,19 +128,6 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
 
             OutlinedButton(
-                enabled = false,
-                onClick = {
-                    if (routeFinderViewModel.travelTimeOption == "Arrive by")
-                        routeFinderViewModel.updateTravelTimeOption("Leave by")
-                    else
-                        routeFinderViewModel.updateTravelTimeOption("Arrive by")
-                },
-                modifier = Modifier.width(125.dp)
-            ) {
-                Text(routeFinderViewModel.travelTimeOption)
-            }
-
-            OutlinedButton(
                 onClick = { showDialog = true }
             ) {
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
@@ -186,68 +173,69 @@ fun RouteCard(route: Route) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.elevatedCardElevation(),
-        onClick = {
-            expanded = !expanded
-        }
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            route.legs.forEach { leg ->
-                val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
-                val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
+    val hasTransitDetails = route.legs.any { leg ->
+        leg.steps.any { step -> step.transitDetails != null }
+    }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (firstStep != null) {
-                        firstStep.transitDetails?.let { transitDetails ->
+    if (hasTransitDetails) {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            elevation = CardDefaults.elevatedCardElevation(),
+            onClick = {
+                expanded = !expanded
+            }
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                route.legs.forEach { leg ->
+                    val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
+                    val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        firstStep?.transitDetails?.let { transitDetails ->
                             Text(text = transitDetails.localizedValues.departureTime.time.text)
                         }
-                    }
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Transfer"
-                    )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Transfer"
+                        )
 
-                    leg.steps.forEach { step ->
-                        step.transitDetails?.let { transitDetails ->
-                            Text(
-                                text = transitDetails.transitLine.nameShort,
-                                color = Color(parseColor(transitDetails.transitLine.color))
-                            )
+                        leg.steps.forEach { step ->
+                            step.transitDetails?.let { transitDetails ->
+                                Text(
+                                    text = transitDetails.transitLine.nameShort,
+                                    color = Color(parseColor(transitDetails.transitLine.color))
+                                )
 
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Transfer"
-                            )
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = "Transfer"
+                                )
+                            }
                         }
-                    }
 
-                    if (lastStep != null) {
-                        lastStep.transitDetails?.let { transitDetails ->
+                        lastStep?.transitDetails?.let { transitDetails ->
                             Text(text = transitDetails.localizedValues.arrivalTime.time.text)
                         }
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = "Expand/Collapse",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
 
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = "Expand/Collapse"
-                    )
-                }
-            }
-
-            if (expanded) {
-                route.legs.forEach { leg ->
-                    LegView(leg)
+                    if (expanded) {
+                        LegView(leg)
+                    }
                 }
             }
         }
