@@ -172,14 +172,16 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
     }
 
     Column {
-        transitRoutesResponse.routes.forEachIndexed() { index, route ->
-                RouteCard(index, route)
+        transitRoutesResponse.routes.forEach() { route ->
+                RouteCard(route)
         }
     }
 }
 
 @Composable
-fun RouteCard(index: Int, route: Route) {
+fun RouteCard(route: Route) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -187,12 +189,30 @@ fun RouteCard(index: Int, route: Route) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        elevation = CardDefaults.elevatedCardElevation()
+        elevation = CardDefaults.elevatedCardElevation(),
+        onClick = {
+            expanded = !expanded
+        }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Option ${index + 1}", modifier = Modifier.align(Alignment.CenterHorizontally))
             route.legs.forEach { leg ->
-                LegView(leg)
+                leg.steps.lastOrNull { it.transitDetails != null }?.let { step ->
+                    step.transitDetails?.let { transitDetails ->
+                        Text(text = "Arrive: ${transitDetails.localizedValues.arrivalTime.time.text}")
+                    }
+                }
+
+                leg.steps.forEach { step ->
+                    step.transitDetails?.let { transitDetails ->
+                        Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
+                    }
+                }
+            }
+
+            if (expanded) {
+                route.legs.forEach { leg ->
+                    LegView(leg)
+                }
             }
         }
     }
@@ -220,13 +240,13 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Direction:", color = Color.Black)
-        Text(text = transitDetails.headsign)
+        Text(text = "The bus departs at:", color = Color.Black)
+        Text(text = transitDetails.localizedValues.departureTime.time.text)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus departs at:", color = Color.Black)
-        Text(text = transitDetails.localizedValues.departureTime.time.text)
+        Text(text = "Direction:", color = Color.Black)
+        Text(text = transitDetails.headsign)
 
         Spacer(modifier = Modifier.size(12.dp))
 
