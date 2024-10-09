@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            var isDarkTheme by remember { mutableStateOf(true) }
             val timetableViewModel: TimetableViewModel = viewModel()
             val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
 
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 gftsRealTimeViewModel.setData(lifeData)
             }
 
-            BusAppTheme {
+            BusAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
