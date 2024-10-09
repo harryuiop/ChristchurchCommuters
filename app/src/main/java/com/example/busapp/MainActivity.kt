@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,15 +55,16 @@ import com.example.busapp.models.FileData
 import com.example.busapp.models.GtfsRealtimeFeed
 import com.example.busapp.models.StopTimeUpdate
 import com.example.busapp.models.TripUpdate
+import com.example.busapp.models.UserData
 import com.example.busapp.screens.AddBusStop
 import com.example.busapp.screens.ViewTimetables
 import com.example.busapp.services.readMetroFiles
 import com.example.busapp.services.MetroApiService
 import com.example.busapp.ui.theme.BusAppTheme
 import com.example.busapp.viewmodels.AddBusStopViewModel
-import com.example.busapp.viewmodels.BusStopViewModel
 import com.example.busapp.viewmodels.GtfsRealTimeViewModel
 import com.example.busapp.viewmodels.TimetableViewModel
+import com.example.busapp.viewmodels.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -73,6 +76,7 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,21 +95,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             val timetableViewModel: TimetableViewModel = viewModel()
             val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
-            val busStopViewModel: BusStopViewModel by koinViewModel()
+            val userViewModel: UserViewModel by koinViewModel()
 
             val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
+
+            LaunchedEffect(Unit) {
+                userViewModel.getAllUsers()
+                if (userViewModel.user.value.isEmpty()) {
+                    userViewModel.addUser(UserData(0, BusStop(-1, "")))
+                }
+                userViewModel.getAllUsers()
+            }
+
 
             CoroutineScope(Dispatchers.IO).launch {
                 val fileData = readMetroFiles(this@MainActivity)
                 timetableViewModel.setData(fileData)
 
-                busStopViewModel.getAllBusStops()
-                if (busStopViewModel.busStops.value.isEmpty()) {
-                    fileData.stopsHashMap.forEach { (key, value) ->
-                        busStopViewModel.addBusStop(BusStop(key.toInt(), value))
-                    }
+                withContext(Dispatchers.Main) {
+
+                    addBusStopViewModel.addBusStops(fileData.stopsHashMap)
+
                 }
-                addBusStopViewModel.setBusStops(busStopViewModel.busStops.first())
             }
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -135,7 +146,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "23940")
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "23940", addBusStopViewModel = addBusStopViewModel, userViewModel = userViewModel)
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -144,7 +155,8 @@ class MainActivity : ComponentActivity() {
                                 RouteFinder(navController = navController)
                             }
                             composable("AddStop") {
-                                AddBusStop(navController = navController, addBusStopViewModel = addBusStopViewModel)
+                                AddBusStop(navController = navController, userViewModel = userViewModel,
+                                    addBusStopViewModel = addBusStopViewModel)
                             }
                         }
                     }
@@ -156,20 +168,27 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewModel,
-                                        timetableViewModel: TimetableViewModel,
-                                        metroApiService: MetroApiService,
-                                        lifecycleScope: CoroutineScope,
-                                        stopId: String) {
+fun Home(
+    navController: NavController,
+    gftsRealTimeViewModel: GtfsRealTimeViewModel,
+    timetableViewModel: TimetableViewModel,
+    metroApiService: MetroApiService,
+    lifecycleScope: CoroutineScope,
+    stopId: String,
+    addBusStopViewModel: AddBusStopViewModel,
+    userViewModel: UserViewModel
+         ) {
     val feed by gftsRealTimeViewModel.feed.collectAsState()
+    val user by userViewModel.user.collectAsState()
+    userViewModel.getAllUsers()
+
+    val context = LocalContext.current
 
     var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
 
-    val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> = getRelevantTripUpdates(
-                                                                gftsRealTimeViewModel.feed.value,
-                                                                stopId)
+
 
     Column(
         modifier = Modifier
@@ -181,44 +200,60 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = "Upcoming - Last updated ${formatTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
+//        Log.i("USERTEST", "Current user: ${userViewModel.user.value.first()}")
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            items(tripUpdatesContainingStopId) { tripUpdate ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.second} " +
-                                  "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.first}",
-                                    fontWeight = FontWeight.Bold, fontSize = 20.sp )
-                        Text("")
-                        Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
-                        Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
-                        Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
+        if (userViewModel.user.value.isNotEmpty() ) {
+            Text(text = "Bus Stop #${userViewModel.user.value.first().selectedStop.id}\n${userViewModel.user.value.first().selectedStop.stopName}", fontSize = 16.sp)
+            val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> =
+                getRelevantTripUpdates(
+                    gftsRealTimeViewModel.feed.value,
+                    userViewModel.user.value.first().selectedStop.id.toString()
+                )
+            Text(
+                text = "Upcoming - Last updated ${formatTime(refreshedData.lastUpdated)}",
+                fontSize = 12.sp
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                items(tripUpdatesContainingStopId) { tripUpdate ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.second} " +
+                                        "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.first}",
+                                fontWeight = FontWeight.Bold, fontSize = 20.sp
+                            )
+                            Text("")
+                            Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
+                            Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
+                            Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
+                        }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.size(12.dp))
+
         }
 
-        Spacer(modifier = Modifier.size(12.dp))
+            Button(
+                onClick = { navController.navigate("AddStop") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(8.dp, Color.White, shape = RectangleShape),
+                colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
+            ) {
+                Text("Add Bus Stop")
+            }
 
-        Button(
-            onClick = { navController.navigate("AddStop") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(8.dp, Color.White, shape = RectangleShape),
-            colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
-        ) {
-            Text("Add Bus Stop")
-        }
 
         Spacer(modifier = Modifier.size(24.dp))
 

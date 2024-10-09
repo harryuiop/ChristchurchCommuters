@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.busapp.models.BusStop
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class AddBusStopViewModel: ViewModel() {
     var userQuery by mutableStateOf("")
@@ -15,16 +16,16 @@ class AddBusStopViewModel: ViewModel() {
         userQuery = query
     }
 
-    var busStops = mutableStateListOf<List<BusStop>>()
-        private set
+    private var _busStops = MutableStateFlow<Map<String, String>>(
+        emptyMap())
+    val busStops: MutableStateFlow<Map<String, String>> get() = _busStops
 
-    fun setBusStops(recvBusStops: List<BusStop>) {
-        busStops.add(recvBusStops)
+
+    fun addBusStops(addedBusStops: Map<String, String>) {
+        _busStops.value = addedBusStops
     }
 
-    fun getBusStops(): List<BusStop> {
-        return busStops.last()
-    }
+
 
 
     var filteredBusStops by mutableStateOf(listOf<BusStop>())
@@ -34,11 +35,11 @@ class AddBusStopViewModel: ViewModel() {
 //        filteredBusStops = busStops
 //    }
 
-    var selectedBusStop by mutableStateOf(-1)
+    var selectedBusStop by mutableStateOf(BusStop(-1, ""))
         private set
 
-    fun updateSelectedBusStop(index: Int) {
-        selectedBusStop = index
+    fun updateSelectedBusStop(id: Int, name: String) {
+        selectedBusStop = BusStop(id, name)
     }
 
 

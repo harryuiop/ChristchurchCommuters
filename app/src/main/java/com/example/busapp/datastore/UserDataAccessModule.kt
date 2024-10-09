@@ -5,10 +5,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.busapp.models.AppData
 import com.example.busapp.models.BusStop
 import com.example.busapp.models.UserData
 import com.example.busapp.viewmodels.AddBusStopViewModel
+import com.example.busapp.viewmodels.UserViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.FlowPreview
@@ -31,6 +33,12 @@ val userDataAccessModule = module {
 
 
     single { Gson() }
+
+    viewModel {
+        UserViewModel(
+            userDataStorage = get()
+        )
+    }
 
     viewModel{
         AddBusStopViewModel()
