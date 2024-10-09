@@ -158,7 +158,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 
 @Composable
 fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
-    if (transitRoutesResponse.routes.isEmpty()) {
+    if (transitRoutesResponse.routes.isNullOrEmpty()) {
         Text(text = "No routes available")
     } else {
         Column {
