@@ -67,8 +67,11 @@ import java.util.Date
 import java.util.Locale
 
 
+import com.example.busapp.viewmodels.RouteFinderViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+    private val routeFinderViewModel: RouteFinderViewModel by viewModel()
 
     private val metroApiService = MetroApiService()
 
@@ -103,6 +106,7 @@ class MainActivity : ComponentActivity() {
 
             BusAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
                 val navController = rememberNavController()
+
                 Scaffold(
                     topBar = {
                         TopAppBar(
@@ -127,7 +131,7 @@ class MainActivity : ComponentActivity() {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
                             }
                             composable("RouteFinder") {
-                                RouteFinder(navController = navController)
+                                RouteFinder(navController = navController, routeFinderViewModel)
                             }
                             composable("AddStop") {
                                 AddBusStop(navController = navController, userViewModel = userViewModel,
