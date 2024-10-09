@@ -20,6 +20,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -120,25 +122,25 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
         Row(
             modifier = Modifier
                 .align(alignment = Alignment.CenterHorizontally)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
+
             OutlinedButton(
                 enabled = false,
                 onClick = {
-                        if (routeFinderViewModel.travelTimeOption == "Arrive by")
-                            routeFinderViewModel.updateTravelTimeOption("Leave by")
-                        else
-                            routeFinderViewModel.updateTravelTimeOption("Arrive by")
-              },
+                    if (routeFinderViewModel.travelTimeOption == "Arrive by")
+                        routeFinderViewModel.updateTravelTimeOption("Leave by")
+                    else
+                        routeFinderViewModel.updateTravelTimeOption("Arrive by")
+                },
                 modifier = Modifier.width(125.dp)
             ) {
                 Text(routeFinderViewModel.travelTimeOption)
             }
 
-            val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
-
             OutlinedButton(
-                modifier = Modifier .padding(horizontal = 6.dp),
                 onClick = { showDialog = true }
             ) {
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
@@ -154,7 +156,8 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Submit Icon"
+                    contentDescription = "Submit Icon",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -169,11 +172,11 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
     if (transitRoutesResponse.routes.isEmpty()) {
         Text(text = "No routes available")
-    }
-
-    Column {
-        transitRoutesResponse.routes.forEach() { route ->
+    } else {
+        Column {
+            transitRoutesResponse.routes.forEach() { route ->
                 RouteCard(route)
+            }
         }
     }
 }
@@ -181,6 +184,7 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
 @Composable
 fun RouteCard(route: Route) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
 
     Card(
         colors = CardDefaults.cardColors(
@@ -196,16 +200,48 @@ fun RouteCard(route: Route) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             route.legs.forEach { leg ->
-                leg.steps.lastOrNull { it.transitDetails != null }?.let { step ->
-                    step.transitDetails?.let { transitDetails ->
-                        Text(text = "Arrive: ${transitDetails.localizedValues.arrivalTime.time.text}")
-                    }
-                }
+                val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
+                val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
 
-                leg.steps.forEach { step ->
-                    step.transitDetails?.let { transitDetails ->
-                        Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (firstStep != null) {
+                        firstStep.transitDetails?.let { transitDetails ->
+                            Text(text = transitDetails.localizedValues.departureTime.time.text)
+                        }
                     }
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Transfer"
+                    )
+
+                    leg.steps.forEach { step ->
+                        step.transitDetails?.let { transitDetails ->
+                            Text(
+                                text = transitDetails.transitLine.nameShort,
+                                color = Color(parseColor(transitDetails.transitLine.color))
+                            )
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Transfer"
+                            )
+                        }
+                    }
+
+                    if (lastStep != null) {
+                        lastStep.transitDetails?.let { transitDetails ->
+                            Text(text = transitDetails.localizedValues.arrivalTime.time.text)
+                        }
+                    }
+
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "Expand/Collapse"
+                    )
                 }
             }
 

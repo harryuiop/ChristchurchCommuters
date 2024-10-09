@@ -94,4 +94,6 @@ dependencies {
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.10"))
     implementation("com.google.android.libraries.places:places:3.5.0")
+    implementation("androidx.compose.material:material-icons-extended:1.7.3")
+
 }
