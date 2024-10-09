@@ -10,6 +10,7 @@ import com.example.busapp.models.AppData
 import com.example.busapp.models.BusStop
 import com.example.busapp.models.UserData
 import com.example.busapp.viewmodels.AddBusStopViewModel
+import com.example.busapp.viewmodels.GtfsRealTimeViewModel
 import com.example.busapp.viewmodels.UserViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -40,8 +41,12 @@ val userDataAccessModule = module {
         )
     }
 
-    viewModel{
+    viewModel {
         AddBusStopViewModel()
+    }
+
+    viewModel {
+        GtfsRealTimeViewModel()
     }
 
 }

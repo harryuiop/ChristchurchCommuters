@@ -1,7 +1,9 @@
 package com.example.busapp.screens
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,20 +46,10 @@ fun AddBusStop(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = "Add Bus Stop",
-                style = TextStyle(fontSize = 30.sp),
-                modifier = Modifier.padding(8.dp)
-            )
-        }
-
+        Text(text = "Christchurch Commuters", fontSize = 24.sp)
         OutlinedTextField(
             value = addBusStopViewModel.userQuery,
             onValueChange = { newQuery -> addBusStopViewModel.updateQuery(newQuery) },
@@ -65,13 +57,17 @@ fun AddBusStop(
             placeholder = { Text("Type Stop # or Location") },
             modifier = Modifier.fillMaxWidth()
         )
-
         LazyColumn(
             modifier = Modifier
-                .padding(bottom = 16.dp)
+                .weight(1f)
+                .fillMaxWidth()
         ) {
             itemsIndexed(busStops.entries.toList()) { index, (key, value) ->
-                if (value.contains(addBusStopViewModel.userQuery, ignoreCase = true) || key.contains(addBusStopViewModel.userQuery, ignoreCase = true)) {
+                if (value.contains(
+                        addBusStopViewModel.userQuery,
+                        ignoreCase = true
+                    ) || key.contains(addBusStopViewModel.userQuery, ignoreCase = true)
+                ) {
                     OutlinedCard(
                         onClick = {
                             Log.d("BusStop", value);
@@ -94,17 +90,18 @@ fun AddBusStop(
                 }
             }
         }
+            Button(
+                onClick = {
+                    userViewModel.editUserById(busStop = addBusStopViewModel.selectedBusStop);
+                    addBusStopViewModel.updateSelectedBusStop(-1, "")
+                    navController.navigate("Home")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = addBusStopViewModel.selectedBusStop.id != -1
+            ) {
+                Text(text = "Done")
+            }
 
     }
-    Button(
-        onClick = {
-            userViewModel.editUserById(busStop = addBusStopViewModel.selectedBusStop);
-            addBusStopViewModel.updateSelectedBusStop(-1, "")
-            navController.navigate("Home")
-                  },
-        modifier = Modifier.fillMaxWidth(),
-        enabled = addBusStopViewModel.selectedBusStop.id != -1
-    ) {
-        Text(text = "Done")
-    }
+
 }

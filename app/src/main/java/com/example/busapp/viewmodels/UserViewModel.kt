@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class UserViewModel(
@@ -18,8 +19,10 @@ class UserViewModel(
 ): ViewModel() {
     //Only ever one user per device
     private val _users = MutableStateFlow<List<UserData>>(emptyList())
-    val user: StateFlow<List<UserData>> = _users.asStateFlow()
+    val users: StateFlow<List<UserData>> get() = _users
 
+    private val _user = MutableStateFlow<UserData?>(null)
+    val user: StateFlow<UserData?> = _user
 
     //Again, only one user
     fun getAllUsers() = viewModelScope.launch {
@@ -41,5 +44,13 @@ class UserViewModel(
         userDataStorage.getAll().catch { Log.e("FLASH_CARD_VIEW_MODEL", it.toString()) }
             .collect { _users.emit(it) }
         }
+
+    fun getUserById(userId: Int?) = viewModelScope.launch {
+        if (userId != null){
+            _user.value = userDataStorage.get { it.getIdentifier() == 0 }.first()
+        } else {
+            _user.value = null
+        }
+    }
 }
 
