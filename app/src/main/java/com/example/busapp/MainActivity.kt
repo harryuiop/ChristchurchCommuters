@@ -52,6 +52,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.BusStop
 import com.example.busapp.models.GtfsRealtimeFeed
+import com.example.busapp.models.LiveBusViaStop
 import com.example.busapp.models.StopTimeUpdate
 import com.example.busapp.models.TripUpdate
 import com.example.busapp.models.UserData
@@ -66,6 +67,10 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import com.example.busapp.viewmodels.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -181,7 +186,8 @@ fun Home(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
 
-    var tripUpdatesContainingStopId by remember { mutableStateOf<List<Pair<TripUpdate, StopTimeUpdate>>>(emptyList()) }
+    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>(emptyList()) }
+
 
     if(isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -189,11 +195,8 @@ fun Home(
         }
     } else {
         if (user!!.selectedStop.id != -1){
-            tripUpdatesContainingStopId =
-                getRelevantTripUpdates(
-                    gftsRealTimeViewModel.feed.value,
-                    user!!.selectedStop.id.toString()
-                )
+            tripUpdatesContainingStopId = getRelevantTripUpdates(gftsRealTimeViewModel.feed.value, user!!.selectedStop.id.toString()).sortedBy { it.arrivalTime }
+
         } else {
             userViewModel.getUserById(0)
         }
@@ -213,10 +216,8 @@ fun Home(
                     text = "Bus Stop #${user?.selectedStop?.id}\n${user?.selectedStop?.stopName}",
                     fontSize = 16.sp
                 )
-                Text(
-                    text = "Upcoming - Last updated ${formatTime(refreshedData.lastUpdated)}",
-                    fontSize = 12.sp
-                )
+                Text(text = "Upcoming - Last updated ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
+
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -230,19 +231,23 @@ fun Home(
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.second} " +
-                                            "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.first}",
-                                    fontWeight = FontWeight.Bold, fontSize = 20.sp
-                                )
+                                Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second} " +
+                                        "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.first}",
+                                    fontWeight = FontWeight.Bold, fontSize = 20.sp )
                                 Text("")
-                                Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
-                                Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
-                                Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
+                                Text("Due${arrivalIn(tripUpdate.arrivalTime)}")
+                                Text("Direction ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
+                                Text("Scheduled Arrival: ${convertDateToTime(tripUpdate.arrivalTime)}")
+                                when (tripUpdate.scheduleRelationship) {
+                                    "SCHEDULED" -> Text("Running to schedule")
+                                    "ADDED" -> Text("Extra trip added")
+                                    "CANCELED" -> Text("Trip canceled")
+                                }
                             }
                         }
                     }
                 }
+
 
                 Spacer(modifier = Modifier.size(12.dp))
             } else {
@@ -298,15 +303,33 @@ fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<Tr
     feed.tripUpdates.forEach { trip ->
         trip.stopTimeUpdates.forEach { stop ->
             if (stop.stopId == stopId) {
-                relevantTrips = relevantTrips + Pair(trip, stop)
+                relevantTrips = relevantTrips + LiveBusViaStop(trip.tripId, stop.stopId, trip.scheduleRelationship, stop.arrival!!.delay, stop.departure!!.delay, stop.arrival.time, stop.departure.time)
             }
         }
     }
     return relevantTrips
 }
 
-fun formatTime(date: Date?): String {
+@SuppressLint("DefaultLocale")
+fun arrivalIn(date: Date?): String {
     if (date == null) return "N/A"
-    val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-    return sdf.format(date)
+
+    val now = Date()
+    val differenceInMillis = date.time - now.time
+    val differenceInSeconds = differenceInMillis / 1000
+
+    val minutes = ((differenceInSeconds % 3600) / 60)
+
+    return if (minutes > 0) {
+        String.format(" in %2d minutes", minutes);
+    } else if (minutes.toInt() == 1) {
+        String.format(" in %2d minute", minutes);
+    } else {
+        " now";
+    }
+}
+
+fun convertDateToTime(date: Date?): String {
+    if (date == null) return "N/A"
+    return SimpleDateFormat("h:mm a", Locale.getDefault()).format(date)
 }
