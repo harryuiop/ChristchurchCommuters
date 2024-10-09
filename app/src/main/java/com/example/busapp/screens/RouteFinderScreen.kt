@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -173,6 +174,7 @@ fun RouteCard(route: Route) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
 
+    // Ensure the route has transit details
     val hasTransitDetails = route.legs.any { leg ->
         leg.steps.any { step -> step.transitDetails != null }
     }
@@ -191,23 +193,39 @@ fun RouteCard(route: Route) {
             }
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                route.legs.forEach { leg ->
-                    val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
-                    val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
+                val leg = route.legs.first()
+                val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
+                val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        firstStep?.transitDetails?.let { transitDetails ->
-                            Text(text = transitDetails.localizedValues.departureTime.time.text)
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // First step departure time
+                    firstStep?.transitDetails?.let { transitDetails ->
+                        Text(text = transitDetails.localizedValues.departureTime.time.text)
+                    }
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Transfer"
+                    )
+
+                    val stepsSize = leg.steps.filter { it.transitDetails != null }.size
+
+                    // In-between steps (only show 2 at most)
+                    if (stepsSize > 2) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreHoriz,
+                            contentDescription = "Transfer"
+                        )
 
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "Transfer"
                         )
 
+                    } else {
                         leg.steps.forEach { step ->
                             step.transitDetails?.let { transitDetails ->
                                 Text(
@@ -221,21 +239,22 @@ fun RouteCard(route: Route) {
                                 )
                             }
                         }
-
-                        lastStep?.transitDetails?.let { transitDetails ->
-                            Text(text = transitDetails.localizedValues.arrivalTime.time.text)
-                        }
-
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "Expand/Collapse",
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
 
-                    if (expanded) {
-                        LegView(leg)
+                    // Final step arrive time
+                    lastStep?.transitDetails?.let { transitDetails ->
+                        Text(text = transitDetails.localizedValues.arrivalTime.time.text)
                     }
+
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "Expand/Collapse",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                if (expanded) {
+                    LegView(leg)
                 }
             }
         }
