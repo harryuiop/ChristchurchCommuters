@@ -1,7 +1,9 @@
 package com.example.busapp.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -84,7 +86,7 @@ fun ViewTimetables(
     var numColumns by rememberSaveable { mutableIntStateOf(1) }
     var numRows by rememberSaveable { mutableDoubleStateOf(1.0) }
 
-    var weekdayVisible by rememberSaveable { mutableStateOf(true) }
+    val weekdayVisible by rememberSaveable { mutableStateOf(true) }
     var saturdayVisible by rememberSaveable { mutableStateOf(true) }
     var sundayVisible by rememberSaveable { mutableStateOf(true) }
     var weekdayClicked by rememberSaveable { mutableStateOf(false) }
@@ -92,6 +94,8 @@ fun ViewTimetables(
     var sundayClicked by rememberSaveable { mutableStateOf(false) }
     var progressVisible by rememberSaveable { mutableStateOf(false) }
     var tableVisible by rememberSaveable { mutableStateOf(false) }
+    val tableBackgroundColour = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
+    val selectedButtonColour = if (isSystemInDarkTheme()) Color.hsl(223F, 0.74F, 0.35F) else Color.Black
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,9 +297,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (weekdayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Weekday")
@@ -327,9 +331,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (saturdayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Saturday")
@@ -361,9 +365,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (sundayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Sunday")
@@ -383,7 +387,9 @@ fun ViewTimetables(
 
                 if (progressVisible) {
                     CircularProgressIndicator(
-                        modifier = Modifier.width(64.dp).height(64.dp),
+                        modifier = Modifier
+                            .width(64.dp)
+                            .height(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
@@ -410,8 +416,9 @@ fun ViewTimetables(
                             columns = GridCells.Fixed(numColumns),
                             modifier = Modifier
                                 .width((numColumns * 128).dp)
-                                .height(((numRows-1) * 35 + 52).dp)
+                                .height(((numRows - 1) * 35 + 52).dp)
                                 .border(2.dp, Color.Black)
+                                .background(tableBackgroundColour)
                         ) {
                             items(headerList) {
                                 Text(it, columnHeaderModifier, fontSize = 10.sp)
