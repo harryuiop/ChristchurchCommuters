@@ -230,6 +230,10 @@ fun LegView(leg: Leg) {
 @Composable
 fun StepView(transitDetails: TransitDetails) {
     Column(modifier = Modifier.padding(6.dp)) {
+        HorizontalDivider(modifier = Modifier.padding(3.dp), thickness = 2.dp, color = Color.White)
+
+        Spacer(modifier = Modifier.size(6.dp))
+
         Text(text = "Walk to stop:", color = Color.Black)
         Text(text = transitDetails.stopDetails.departureStop.name)
 
@@ -257,10 +261,6 @@ fun StepView(transitDetails: TransitDetails) {
 
         Text(text = "The bus arrives at:", color = Color.Black)
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
-
-        Spacer(modifier = Modifier.size(6.dp))
-
-        HorizontalDivider(modifier = Modifier.padding(3.dp), thickness = 2.dp, color = Color.White)
     }
 }
 
