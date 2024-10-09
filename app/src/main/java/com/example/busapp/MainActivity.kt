@@ -58,6 +58,7 @@ import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.example.busapp.viewmodels.GtfsRealTimeViewModel
 import com.example.busapp.viewmodels.TimetableViewModel
 import com.example.busapp.viewmodels.UserViewModel
+import com.example.busapp.viewmodels.RouteFinderViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,27 +68,26 @@ import java.util.Date
 import java.util.Locale
 
 
-import com.example.busapp.viewmodels.RouteFinderViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-    private val routeFinderViewModel: RouteFinderViewModel by viewModel()
 
-    private val metroApiService = MetroApiService()
 
     @SuppressLint("CoroutineCreationDuringComposition")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val routeFinderViewModel: RouteFinderViewModel by koinViewModel()
             var isDarkTheme by remember { mutableStateOf(true) }
             val timetableViewModel: TimetableViewModel = viewModel()
+            val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
             val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
             val userViewModel: UserViewModel by koinViewModel()
-            userViewModel.addUser(UserData(0, BusStop(-1, "")))
+            val metroApiService = MetroApiService()
 
-            val gftsRealTimeViewModel: GtfsRealTimeViewModel = viewModel()
+            userViewModel.addUser(UserData(0, BusStop(-1, "")))
 
             CoroutineScope(Dispatchers.IO).launch {
                 val lifeData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
