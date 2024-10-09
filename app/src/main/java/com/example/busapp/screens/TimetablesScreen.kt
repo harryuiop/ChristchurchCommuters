@@ -1,7 +1,9 @@
 package com.example.busapp.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -92,6 +94,8 @@ fun ViewTimetables(
     var sundayClicked by rememberSaveable { mutableStateOf(false) }
     var progressVisible by rememberSaveable { mutableStateOf(false) }
     var tableVisible by rememberSaveable { mutableStateOf(false) }
+    val tableBackgroundColour = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
+    val selectedButtonColour = if (isSystemInDarkTheme()) Color.hsl(223F, 0.74F, 0.35F) else Color.Black
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,7 +297,7 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (weekdayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
@@ -327,7 +331,7 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (saturdayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
@@ -361,7 +365,7 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (sundayClicked) {
-                                ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
+                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
                             } else {
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
@@ -414,6 +418,7 @@ fun ViewTimetables(
                                 .width((numColumns * 128).dp)
                                 .height(((numRows - 1) * 35 + 52).dp)
                                 .border(2.dp, Color.Black)
+                                .background(tableBackgroundColour)
                         ) {
                             items(headerList) {
                                 Text(it, columnHeaderModifier, fontSize = 10.sp)
