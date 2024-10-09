@@ -84,7 +84,7 @@ fun ViewTimetables(
     var numColumns by rememberSaveable { mutableIntStateOf(1) }
     var numRows by rememberSaveable { mutableDoubleStateOf(1.0) }
 
-    var weekdayVisible by rememberSaveable { mutableStateOf(true) }
+    val weekdayVisible by rememberSaveable { mutableStateOf(true) }
     var saturdayVisible by rememberSaveable { mutableStateOf(true) }
     var sundayVisible by rememberSaveable { mutableStateOf(true) }
     var weekdayClicked by rememberSaveable { mutableStateOf(false) }
@@ -295,7 +295,7 @@ fun ViewTimetables(
                             colors = if (weekdayClicked) {
                                 ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Weekday")
@@ -329,7 +329,7 @@ fun ViewTimetables(
                             colors = if (saturdayClicked) {
                                 ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Saturday")
@@ -363,7 +363,7 @@ fun ViewTimetables(
                             colors = if (sundayClicked) {
                                 ButtonColors(Color.Black, Color.White, Color.Gray, Color.White)
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, Color.White, Color.Gray, Color.White)
+                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
                             Text("Sunday")
@@ -383,7 +383,9 @@ fun ViewTimetables(
 
                 if (progressVisible) {
                     CircularProgressIndicator(
-                        modifier = Modifier.width(64.dp).height(64.dp),
+                        modifier = Modifier
+                            .width(64.dp)
+                            .height(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
@@ -410,7 +412,7 @@ fun ViewTimetables(
                             columns = GridCells.Fixed(numColumns),
                             modifier = Modifier
                                 .width((numColumns * 128).dp)
-                                .height(((numRows-1) * 35 + 52).dp)
+                                .height(((numRows - 1) * 35 + 52).dp)
                                 .border(2.dp, Color.Black)
                         ) {
                             items(headerList) {
