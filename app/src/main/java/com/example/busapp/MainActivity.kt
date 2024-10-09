@@ -2,7 +2,6 @@ package com.example.busapp
 
 import RouteFinder
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -19,10 +18,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-
 import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
-
-
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,8 +48,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.BusStop
 import com.example.busapp.models.GtfsRealtimeFeed
 import com.example.busapp.models.LiveBusViaStop
-import com.example.busapp.models.StopTimeUpdate
-import com.example.busapp.models.TripUpdate
 import com.example.busapp.models.UserData
 import com.example.busapp.screens.AddBusStop
 import com.example.busapp.screens.ViewTimetables
@@ -67,10 +60,6 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import com.example.busapp.viewmodels.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -89,6 +78,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            var isDarkTheme by remember { mutableStateOf(true) }
             val timetableViewModel: TimetableViewModel = viewModel()
             val addBusStopViewModel: AddBusStopViewModel by koinViewModel()
             val userViewModel: UserViewModel by koinViewModel()
@@ -111,7 +101,7 @@ class MainActivity : ComponentActivity() {
             }
 
 
-            BusAppTheme {
+            BusAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
