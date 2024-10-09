@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busapp.models.FileData
 import com.example.busapp.models.GtfsRealtimeFeed
+import com.example.busapp.models.LiveBusViaStop
 import com.example.busapp.models.StopTimeUpdate
 import com.example.busapp.models.TripUpdate
 import com.example.busapp.screens.ViewTimetables
@@ -42,16 +42,12 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.time.Duration.Companion.hours
 
 
 class MainActivity : ComponentActivity() {
@@ -97,7 +93,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "23940")
+                                Home(navController = navController, gftsRealTimeViewModel= gftsRealTimeViewModel, timetableViewModel = timetableViewModel, metroApiService = metroApiService, lifecycleScope = lifecycleScope, stopId = "53088")
                             }
                             composable("Timetables") {
                                 ViewTimetables(navController = navController, timetableViewModel = timetableViewModel)
@@ -129,9 +125,9 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
 
-    val tripUpdatesContainingStopId: List<Pair<TripUpdate, StopTimeUpdate>> = getRelevantTripUpdates(
+    val tripUpdatesContainingStopId: List<LiveBusViaStop> = getRelevantTripUpdates(
                                                                 gftsRealTimeViewModel.feed.value,
-                                                                stopId)
+                                                                stopId).sortedBy { it.arrivalTime }
 
     Column(
         modifier = Modifier
@@ -143,7 +139,7 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = "Upcoming - Last updated ${formatTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
+        Text(text = "Upcoming - Last updated ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
 
         LazyColumn(
             modifier = Modifier
@@ -158,13 +154,18 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.second} " +
-                                  "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.first.tripId]]?.first}",
+                        Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second} " +
+                                  "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.first}",
                                     fontWeight = FontWeight.Bold, fontSize = 20.sp )
                         Text("")
-                        Text("Expected Arrival: ${formatTime(tripUpdate.second.arrival?.time)}")
-                        Text("Expected Departure: ${formatTime(tripUpdate.second.departure?.time)}")
-                        Text("Schedule: ${tripUpdate.first.scheduleRelationship}")
+                        Text("Due${arrivalIn(tripUpdate.arrivalTime)}")
+                        Text("Direction ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
+                        Text("Scheduled Arrival: ${convertDateToTime(tripUpdate.arrivalTime)}")
+                        when (tripUpdate.scheduleRelationship) {
+                            "SCHEDULED" -> Text("Running to schedule")
+                            "ADDED" -> Text("Extra trip added")
+                            "CANCELED" -> Text("Trip canceled")
+                        }
                     }
                 }
             }
@@ -212,22 +213,40 @@ fun Home(navController: NavController, gftsRealTimeViewModel: GtfsRealTimeViewMo
     }
 }
 
-fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<Pair<TripUpdate, StopTimeUpdate>> {
-    var relevantTrips: List<Pair<TripUpdate, StopTimeUpdate>> = emptyList()
+fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<LiveBusViaStop> {
+    var relevantTrips: List<LiveBusViaStop> = emptyList()
     feed.tripUpdates.forEach { trip ->
         trip.stopTimeUpdates.forEach { stop ->
             if (stop.stopId == stopId) {
-                relevantTrips = relevantTrips + Pair(trip, stop)
+                relevantTrips = relevantTrips + LiveBusViaStop(trip.tripId, stop.stopId, trip.scheduleRelationship, stop.arrival!!.delay, stop.departure!!.delay, stop.arrival.time, stop.departure.time)
             }
         }
     }
     return relevantTrips
 }
 
-fun formatTime(date: Date?): String {
+@SuppressLint("DefaultLocale")
+fun arrivalIn(date: Date?): String {
     if (date == null) return "N/A"
-    val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-    return sdf.format(date)
+
+    val now = Date()
+    val differenceInMillis = date.time - now.time
+    val differenceInSeconds = differenceInMillis / 1000
+
+    val minutes = ((differenceInSeconds % 3600) / 60)
+
+    return if (minutes > 0) {
+        String.format(" in %2d minutes", minutes);
+    } else if (minutes.toInt() == 1) {
+        String.format(" in %2d minute", minutes);
+    } else {
+        " now";
+    }
+}
+
+fun convertDateToTime(date: Date?): String {
+    if (date == null) return "N/A"
+    return SimpleDateFormat("h:mm a", Locale.getDefault()).format(date)
 }
 
 suspend fun readFiles(context: Context) = coroutineScope {
