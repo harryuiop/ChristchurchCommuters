@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,7 +68,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
+import androidx.compose.material.icons.filled.Map
 
 
 class MainActivity : ComponentActivity() {
@@ -163,8 +165,13 @@ fun Home(
     userViewModel.getAllUsers()
     val users by userViewModel.users.collectAsState(emptyList())
     val user by userViewModel.user.collectAsState()
+    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>>(emptyList()) }
+    var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
+        lastUpdated = Date(0),
+        tripUpdates = emptyList())) }
 
-    LaunchedEffect(users) {
+
+    LaunchedEffect(users,tripUpdatesContainingStopId) {
         if (users.isNotEmpty()) {
             isLoading = false
             userViewModel.getUserById(0)
@@ -173,11 +180,6 @@ fun Home(
         }
     }
 
-    var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
-        lastUpdated = Date(0),
-        tripUpdates = emptyList())) }
-
-    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>>(emptyList()) }
 
 
     if(isLoading) {
@@ -204,8 +206,9 @@ fun Home(
 
             if (user!!.selectedStop.id != -1) {
                 Text(
-                    text = "Bus Stop #${user?.selectedStop?.id}\n${user?.selectedStop?.stopName}",
-                    fontSize = 16.sp
+                    text = "Live Updates: Stop #${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
                 )
                 Text(text = "Upcoming - Last updated ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
 
@@ -257,14 +260,14 @@ fun Home(
             Spacer(modifier = Modifier.size(24.dp))
 
             Row {
-                Button(
+                IconButton(
                     onClick = { navController.navigate("Timetables") },
                     modifier = Modifier.padding(horizontal = 20.dp)
                 ) {
-                    Text(text = "Timetables")
+                    Icon(imageVector = Icons.Filled.DateRange, contentDescription = "Timetables")
                 }
-                Button(onClick = { navController.navigate("RouteFinder") }) {
-                    Text(text = "Route Finder")
+                IconButton(onClick = { navController.navigate("RouteFinder") }) {
+                    Icon(imageVector = Icons.Filled.Map, contentDescription = "Timetables")
                 }
             }
             Row {
