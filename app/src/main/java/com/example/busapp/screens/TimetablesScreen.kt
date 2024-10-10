@@ -100,7 +100,7 @@ fun ViewTimetables(
     var progressVisible by rememberSaveable { mutableStateOf(false) }
     var tableVisible by rememberSaveable { mutableStateOf(false) }
     val tableBackgroundColour = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
-    val selectedButtonColour = if (isSystemInDarkTheme()) Color.hsl(223F, 0.74F, 0.35F) else Color.Black
+
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -158,16 +158,8 @@ fun ViewTimetables(
                                             zeroDirection = true
                                             headerList = findHeaderNames(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopNamesPerTrip)
                                             dataList = getDataList(mondayToFridayTripsPerRouteDirection0[route[0]]!!, stopTimesPerTrip)
-                                            if (!sundayTripsPerRouteDirection0.containsKey(route[0])) {
-                                                sundayVisible = false
-                                            } else {
-                                                sundayVisible = true
-                                            }
-                                            if (!saturdayTripsPerRouteDirection0.containsKey(route[0])) {
-                                                saturdayVisible = false
-                                            } else {
-                                                saturdayVisible = true
-                                            }
+                                            sundayVisible = sundayTripsPerRouteDirection0.containsKey(route[0])
+                                            saturdayVisible = saturdayTripsPerRouteDirection0.containsKey(route[0])
                                         }
                                         numColumns = headerList.size
                                         numRows = ceil((((headerList.size + dataList.size) / headerList.size).toDouble()))
@@ -181,6 +173,9 @@ fun ViewTimetables(
 
                 Button(
                     onClick = {
+                        if (selectedRouteId == "") {
+                            return@Button
+                        }
                         progressVisible = true
                         tableVisible = false
                         CoroutineScope(Dispatchers.IO).launch {
@@ -410,16 +405,6 @@ fun ViewTimetables(
 
             }
         }
-
-        val columnHeaderModifier = Modifier
-            .border(1.dp, Color.Black)
-            .padding(4.dp)
-            .size(50.dp)
-        val dataModifier = Modifier
-            .border(1.dp, Color.Black)
-            .size(35.dp)
-            .wrapContentSize()
-            .padding(4.dp)
 
         item {
             LazyRow {
