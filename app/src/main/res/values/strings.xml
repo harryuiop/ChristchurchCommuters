@@ -22,4 +22,10 @@
     <string name="time_picker_title">Select Time &amp; Date</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+
+    <!--Add Bus Stop screen-->
+    <string name="metro_bus_stops_title">Metro Bus Stops</string>
+    <string name="label_search">Search</string>
+    <string name="text_placeholder_type_stop">Type Stop # or Location</string>
+    <string name="button_add_to_home">Add to Home</string>
 </resources>
