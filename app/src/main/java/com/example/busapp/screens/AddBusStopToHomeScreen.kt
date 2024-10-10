@@ -37,7 +37,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key.Companion.Search
@@ -56,7 +60,6 @@ import com.example.busapp.ui.theme.PurpleGrey80
 import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.example.busapp.viewmodels.UserViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBusStop(
     addBusStopViewModel: AddBusStopViewModel,
@@ -67,6 +70,7 @@ fun AddBusStop(
     val busStops: Map<String, String> by addBusStopViewModel.busStops.collectAsState()
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
+    var clickedIndex by rememberSaveable { mutableIntStateOf(-1)}
 
     Column(
         modifier = Modifier
@@ -96,12 +100,17 @@ fun AddBusStop(
                         onClick = {
                             addBusStopViewModel.updateSelectedBusStop(key.toInt(), value);
                             focusManager.clearFocus()
+                            clickedIndex = index
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = PurpleGrey40,
+                            containerColor = if (clickedIndex != index) {
+                                PurpleGrey40
+                            } else {
+                                Purple80
+                            },
                         )
                     ) {
                         Text(
@@ -113,9 +122,10 @@ fun AddBusStop(
                             style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                         )
 
-                        Text(text = value, modifier = Modifier.padding(8.dp)
-                                                .offset(x=(0).dp,y=(-5).dp)
-                                                .align(Alignment.CenterHorizontally), style = typography.bodyLarge.copy(fontWeight = Bold))
+                        Text(text = value,
+                            modifier = Modifier.padding(8.dp)
+                                .offset(x=(0).dp,y=(-5).dp)
+                                .align(Alignment.CenterHorizontally), style = typography.bodyLarge.copy(fontWeight = Bold))
                     }
                 }
             }
