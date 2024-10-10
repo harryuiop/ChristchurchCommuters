@@ -2,6 +2,7 @@ package com.example.busapp
 
 import RouteFinder
 import android.annotation.SuppressLint
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,7 +69,13 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedButton
 
 
 class MainActivity : ComponentActivity() {
@@ -163,8 +172,13 @@ fun Home(
     userViewModel.getAllUsers()
     val users by userViewModel.users.collectAsState(emptyList())
     val user by userViewModel.user.collectAsState()
+    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>>(emptyList()) }
+    var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
+        lastUpdated = Date(0),
+        tripUpdates = emptyList())) }
 
-    LaunchedEffect(users) {
+
+    LaunchedEffect(users,tripUpdatesContainingStopId) {
         if (users.isNotEmpty()) {
             isLoading = false
             userViewModel.getUserById(0)
@@ -172,13 +186,6 @@ fun Home(
             userViewModel.addUser(UserData(0, BusStop(-1, "")))
         }
     }
-
-    var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
-        lastUpdated = Date(0),
-        tripUpdates = emptyList())) }
-
-    var tripUpdatesContainingStopId by remember { mutableStateOf<List<LiveBusViaStop>>(emptyList()) }
-
 
     if(isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -204,15 +211,29 @@ fun Home(
 
             if (user!!.selectedStop.id != -1) {
                 Text(
-                    text = "Bus Stop #${user?.selectedStop?.id}\n${user?.selectedStop?.stopName}",
-                    fontSize = 16.sp
+                    text = "Your Stop:\n#${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
                 )
                 Text(text = "Upcoming - Last updated ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
+                Button(
+                    onClick = {
+                        lifecycleScope.launch {
+                            val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                            Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
+                            gftsRealTimeViewModel.setData(liveData)
+                            refreshedData = liveData
+                        }
+                    }) {
+                    Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Routes")
+                    Text("Refresh")
+                }
 
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
+                        .fillMaxHeight()
                 ) {
                     items(tripUpdatesContainingStopId) { tripUpdate ->
                         Card(
@@ -225,9 +246,8 @@ fun Home(
                                 Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second} " +
                                         "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.first}",
                                     fontWeight = FontWeight.Bold, fontSize = 20.sp )
-                                Text("")
                                 Text("Due${arrivalIn(tripUpdate.arrivalTime)}")
-                                Text("Direction ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
+                                Text("Direction: ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
                                 Text("Scheduled Arrival: ${convertDateToTime(tripUpdate.arrivalTime)}")
                                 when (tripUpdate.scheduleRelationship) {
                                     "SCHEDULED" -> Text("Running to schedule")
@@ -238,53 +258,61 @@ fun Home(
                         }
                     }
                 }
-
-
                 Spacer(modifier = Modifier.size(12.dp))
+
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                ) {}
             }
 
-            Button(
-                onClick = { navController.navigate("AddStop") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(8.dp, Color.White, shape = RectangleShape),
-                colors = ButtonColors(Color.White, Color.Black, Color.White, Color.Black)
-            ) {
-                Text(if (user!!.selectedStop.id == -1) "Add Bus Stop" else "Change Bus Stop")
+
+            Row {
+                Button(
+                    onClick = { navController.navigate("AddStop") },
+                    modifier = Modifier
+                ) {
+                    Text(if (user!!.selectedStop.id == -1) "Add Bus Stop" else "Change Bus Stop")
+                }
             }
 
 
             Spacer(modifier = Modifier.size(24.dp))
 
-            Row {
-                Button(
-                    onClick = { navController.navigate("Timetables") },
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                ) {
-                    Text(text = "Timetables")
-                }
-                Button(onClick = { navController.navigate("RouteFinder") }) {
-                    Text(text = "Route Finder")
-                }
-            }
-            Row {
-                Button(onClick = {
-                    lifecycleScope.launch {
-                        val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
-                        Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
-                        gftsRealTimeViewModel.setData(liveData)
-                        refreshedData = liveData
+
+                Row {
+                    Column {
+                        Button(
+                            onClick = { navController.navigate("Timetables") },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
+                        ) {
+                            Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Timetables",
+                                modifier = Modifier
+                                .size(30.dp))
+                            Text("Timetables")
+                        }
                     }
-                }) {
-                    Text(text = "Refresh Data")
+
+                    Column {
+                        Button(
+                            onClick = { navController.navigate("RouteFinder") },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
+                        ) {
+                            Icon(imageVector = Icons.Outlined.Map, contentDescription = "Routes",
+                                modifier = Modifier
+                                    .size(30.dp))
+                            Text("Routes")
+
+                        }
+                    }
                 }
-            }
 
             Spacer(modifier = Modifier.size(12.dp))
         }
     }
-
-
 }
 
 fun getRelevantTripUpdates(feed: GtfsRealtimeFeed, stopId: String): List<LiveBusViaStop> {
