@@ -28,4 +28,12 @@
     <string name="label_search">Search</string>
     <string name="text_placeholder_type_stop">Type Stop # or Location</string>
     <string name="button_add_to_home">Add to Home</string>
+
+    <!--Add Timetables screen-->
+    <string name="timetables_title">Timetables</string>
+    <string name="text_placeholder_select_bus">Select Bus Service</string>
+    <string name="view_other_direction">View Other Direction</string>
+    <string name="weekday">Weekday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
 </resources>
