@@ -176,7 +176,7 @@ fun Home(
     var refreshedData by remember { mutableStateOf(GtfsRealtimeFeed(
         lastUpdated = Date(0),
         tripUpdates = emptyList())) }
-
+    refreshedData = feed
 
     LaunchedEffect(users,tripUpdatesContainingStopId) {
         if (users.isNotEmpty()) {
