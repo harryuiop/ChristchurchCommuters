@@ -352,11 +352,11 @@ fun arrivalIn(date: Date?): String {
     val minutes = ((differenceInSeconds % 3600) / 60)
 
     return if (minutes > 0) {
-        String.format(" in %2d minutes", minutes)
+        String.format(stringResource(id = R.string.in_minutes), minutes)
     } else if (minutes.toInt() == 1) {
-        String.format(" in %2d minute", minutes)
+        String.format(stringResource(id = R.string.in_minute), minutes)
     } else {
-        " ${stringResource(id = R.string.now)}"
+        stringResource(id = R.string.now)
     }
 }
 

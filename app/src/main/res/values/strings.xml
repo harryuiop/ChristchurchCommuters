@@ -58,4 +58,6 @@
     <string name="button_text_routes">Routes</string>
     <string name="not_available">N/A</string>
     <string name="now">now</string>
+    <string name="in_minutes">in %2d minutes</string>
+    <string name="in_minute">in %2d minute</string>
 </resources>
