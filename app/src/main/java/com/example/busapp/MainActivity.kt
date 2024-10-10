@@ -333,6 +333,8 @@ fun Home(
                         }
                     }
                 }
+            Spacer(modifier = Modifier.size(12.dp))
+
         }
     }
 }

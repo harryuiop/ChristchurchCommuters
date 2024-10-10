@@ -20,7 +20,13 @@ class RouteFinderViewModel(
     var startLocation by mutableStateOf("")
         private set
 
+    var startPredictions by mutableStateOf<List<AutocompletePrediction>>(emptyList())
+        private set
+
     var destination by mutableStateOf("")
+        private set
+
+    var destinationPredictions by mutableStateOf<List<AutocompletePrediction>>(emptyList())
         private set
 
     var travelTimeOption by mutableStateOf("Leave by")
@@ -30,13 +36,22 @@ class RouteFinderViewModel(
         private set
 
     var transitRoutes: TransitRoutesResponse by mutableStateOf(TransitRoutesResponse(emptyList()))
+        private set
 
     fun updateStartLocation(newStartLocation : String) {
         startLocation = newStartLocation
     }
 
+    fun updateStartPredictions(newStartPredictions : List<AutocompletePrediction>) {
+        startPredictions = newStartPredictions
+    }
+
     fun updateDestination(newDestination : String) {
         destination = newDestination
+    }
+
+    fun updateDestinationPredictions(newDestinationPredictions : List<AutocompletePrediction>) {
+        destinationPredictions = newDestinationPredictions
     }
 
     fun findAutocompletePredictions(newQuery: String, onResult: (List<AutocompletePrediction>) -> Unit) {
@@ -55,19 +70,13 @@ class RouteFinderViewModel(
         calendar = newCalendar
     }
 
-    fun getRoutes(): TransitRoutesResponse {
-        return routesRepository.getRoutes(startLocation, destination, timeToZuluFormat())
+    fun fetchRoutes() {
+        transitRoutes = routesRepository.getRoutes(startLocation, destination, timeToZuluFormat())
     }
 
     private fun timeToZuluFormat(): String {
         val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH)
         formatter.timeZone = TimeZone.getTimeZone("UTC")
         return formatter.format(calendar.time)
-    }
-
-    fun resetValues() {
-        startLocation = ""
-        destination = ""
-        calendar = Calendar.getInstance()
     }
 }
