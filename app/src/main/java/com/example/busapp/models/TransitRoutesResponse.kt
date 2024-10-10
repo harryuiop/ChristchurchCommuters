@@ -106,7 +106,7 @@ data class TransitLine(
     val agencies: List<Agency>,
     val name: String,
     val color: String,
-    val nameShort: String,
+    val nameShort: String?,
     val textColor: String,
     val vehicle: Vehicle,
 ) : Parcelable

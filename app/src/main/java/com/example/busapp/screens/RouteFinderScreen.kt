@@ -138,7 +138,6 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 onClick = {
                     CoroutineScope(Dispatchers.IO).launch {
                         transitRoutes = routeFinderViewModel.getRoutes()
-                        println(transitRoutes.toString())
                     }
                 }
             ) {
@@ -201,56 +200,69 @@ fun RouteCard(route: Route) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // First step departure time
-                    firstStep?.transitDetails?.let { transitDetails ->
-                        Text(text = transitDetails.localizedValues.departureTime.time.text)
-                    }
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // First step departure time
+                            firstStep?.transitDetails?.let { transitDetails ->
+                                Text(text = transitDetails.localizedValues.departureTime.time.text)
+                            }
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Transfer"
-                    )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Transfer"
+                            )
 
-                    val stepsSize = leg.steps.filter { it.transitDetails != null }.size
+                            val stepsSize = leg.steps.filter { it.transitDetails != null }.size
 
-                    // In-between steps (only show 2 at most)
-                    if (stepsSize > 2) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreHoriz,
-                            contentDescription = "Transfer"
-                        )
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Transfer"
-                        )
-
-                    } else {
-                        leg.steps.forEach { step ->
-                            step.transitDetails?.let { transitDetails ->
-                                Text(
-                                    text = transitDetails.transitLine.nameShort,
-                                    color = Color(parseColor(transitDetails.transitLine.color))
+                            // In-between steps (only show 2 at most)
+                            if (stepsSize > 2) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreHoriz,
+                                    contentDescription = "Ellipsis"
                                 )
 
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "Transfer"
                                 )
+
+                            } else {
+                                leg.steps.forEach { step ->
+                                    step.transitDetails?.let { transitDetails ->
+                                        Text(
+                                            text = transitDetails.transitLine.nameShort?:"?",
+                                            color = Color(parseColor(transitDetails.transitLine.color))
+                                        )
+
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = "Transfer"
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Final step arrive time
+                            lastStep?.transitDetails?.let { transitDetails ->
+                                Text(text = transitDetails.localizedValues.arrivalTime.time.text)
                             }
                         }
                     }
 
-                    // Final step arrive time
-                    lastStep?.transitDetails?.let { transitDetails ->
-                        Text(text = transitDetails.localizedValues.arrivalTime.time.text)
+                    Column(
+                        modifier = Modifier.align(Alignment.CenterVertically).padding(start = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = "Expand/Collapse",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = "Expand/Collapse",
-                        modifier = Modifier.size(24.dp)
-                    )
                 }
 
                 if (expanded) {
