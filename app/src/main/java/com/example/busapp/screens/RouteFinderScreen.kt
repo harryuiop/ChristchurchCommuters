@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DockedSearchBar
@@ -134,13 +135,14 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
                     CoroutineScope(Dispatchers.IO).launch {
                         transitRoutes = routeFinderViewModel.getRoutes()
                     }
-                }
-            ) {
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFD0BCFF))
+                ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Submit Icon",
@@ -289,32 +291,32 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Walk to stop:", color = Color.Black)
+        Text(text = "Walk to stop:", color = Color.Gray)
         Text(text = transitDetails.stopDetails.departureStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Take the bus line:", color = Color.Black)
+        Text(text = "Take the bus line:", color = Color.Gray)
         Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus departs at:", color = Color.Black)
+        Text(text = "The bus departs at:", color = Color.Gray)
         Text(text = transitDetails.localizedValues.departureTime.time.text)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Direction:", color = Color.Black)
+        Text(text = "Direction:", color = Color.Gray)
         Text(text = transitDetails.headsign)
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = "Exit bus at stop:", color = Color.Black)
+        Text(text = "Exit bus at stop:", color = Color.Gray)
         Text(text = transitDetails.stopDetails.arrivalStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus arrives at:", color = Color.Black)
+        Text(text = "The bus arrives at:", color = Color.Gray)
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
     }
 }

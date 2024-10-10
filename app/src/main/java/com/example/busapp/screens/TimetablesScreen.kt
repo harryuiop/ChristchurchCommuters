@@ -19,6 +19,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Autorenew
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -27,6 +30,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -261,12 +265,16 @@ fun ViewTimetables(
                                 }
                             }
                         }
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                 ) {
-                    Text("View Other Direction", fontSize = 12.sp)
+                    Icon(imageVector = Icons.Outlined.Autorenew, contentDescription = "Timetables",
+                        modifier = Modifier
+                            .size(30.dp))
+                    Text(" View Other Direction", fontSize = 12.sp)
                 }
 
-                Spacer(modifier = Modifier.size(20.dp))
+//                Spacer(modifier = Modifier.size(10.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -298,9 +306,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (weekdayClicked) {
-                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFD0BCFF))
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                             }
                         ) {
                             Text("Weekday")
@@ -332,9 +340,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (saturdayClicked) {
-                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFD0BCFF))
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                             }
                         ) {
                             Text("Saturday")
@@ -366,9 +374,9 @@ fun ViewTimetables(
                                 }
                             },
                             colors = if (sundayClicked) {
-                                ButtonColors(selectedButtonColour, Color.White, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFD0BCFF))
                             } else {
-                                ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
+                                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                             }
                         ) {
                             Text("Sunday")

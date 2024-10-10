@@ -73,6 +73,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.OutlinedButton
@@ -119,7 +120,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Bus App") },
+                            title = { Text("Christchurch Commuters") },
                             navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
@@ -178,7 +179,7 @@ fun Home(
         tripUpdates = emptyList())) }
 
 
-    LaunchedEffect(users,tripUpdatesContainingStopId) {
+    LaunchedEffect(users) {
         if (users.isNotEmpty()) {
             isLoading = false
             userViewModel.getUserById(0)
@@ -199,35 +200,27 @@ fun Home(
             userViewModel.getUserById(0)
         }
 
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Christchurch Commuters", fontSize = 24.sp)
-
             Spacer(modifier = Modifier.size(12.dp))
 
             if (user!!.selectedStop.id != -1) {
                 Text(
-                    text = "Your Stop:\n#${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
+                    text = "${user?.selectedStop?.stopName} - ${user?.selectedStop?.id} ",
                     fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
                 )
-                Text(text = "Upcoming - Last updated ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
-                Button(
-                    onClick = {
-                        lifecycleScope.launch {
-                            val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
-                            Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
-                            gftsRealTimeViewModel.setData(liveData)
-                            refreshedData = liveData
-                        }
-                    }) {
-                    Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Routes")
-                    Text("Refresh")
-                }
+
+
+                Text("Updated ${convertDateToTime(refreshedData.lastUpdated)}")
+
+                Spacer(modifier = Modifier.size(12.dp))
 
                 LazyColumn(
                     modifier = Modifier
@@ -258,7 +251,6 @@ fun Home(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.size(12.dp))
 
             } else {
                 LazyColumn(
@@ -269,18 +261,37 @@ fun Home(
                 ) {}
             }
 
+            Spacer(modifier = Modifier.size(12.dp))
 
             Row {
                 Button(
                     onClick = { navController.navigate("AddStop") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
                     modifier = Modifier
                 ) {
-                    Text(if (user!!.selectedStop.id == -1) "Add Bus Stop" else "Change Bus Stop")
+                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Timetables",
+                        modifier = Modifier
+                            .size(30.dp))
+                    Text(if (user!!.selectedStop.id == -1) "Add Stop" else "Change Stop")
+                }
+
+                Button(
+                    onClick = {
+                        lifecycleScope.launch {
+                            val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                            Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
+                            gftsRealTimeViewModel.setData(liveData)
+                            refreshedData = liveData
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)) {
+                    Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Routes")
+                    Text(" Refresh")
                 }
             }
 
 
-            Spacer(modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
 
                 Row {
@@ -292,7 +303,7 @@ fun Home(
                             Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Timetables",
                                 modifier = Modifier
                                 .size(30.dp))
-                            Text("Timetables")
+                            Text(" Timetables")
                         }
                     }
 
@@ -304,13 +315,11 @@ fun Home(
                             Icon(imageVector = Icons.Outlined.Map, contentDescription = "Routes",
                                 modifier = Modifier
                                     .size(30.dp))
-                            Text("Routes")
+                            Text(" Routes")
 
                         }
                     }
                 }
-
-            Spacer(modifier = Modifier.size(12.dp))
         }
     }
 }
