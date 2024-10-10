@@ -212,11 +212,12 @@ fun Home(
 
             if (user!!.selectedStop.id != -1) {
                 Text(
-                    text = "${R.string.your_stop}\n#${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
+                    text = "${stringResource(id = R.string.your_stop)}\n#${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
                 )
-                Text(text = "${R.string.upcoming} ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
+
+                Text(text = "${stringResource(id = R.string.upcoming)} ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
                 Button(
                     onClick = {
                         lifecycleScope.launch {
