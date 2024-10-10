@@ -230,22 +230,7 @@ fun Home(
                 Text("Updated ${convertDateToTime(refreshedData.lastUpdated)}")
 
                 Spacer(modifier = Modifier.size(12.dp))
-                Text(text = "${R.string.upcoming} ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
-                Button(
-                    onClick = {
-                        lifecycleScope.launch {
-                            val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
-                            Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
-                            gftsRealTimeViewModel.setData(liveData)
-                            refreshedData = liveData
-                        }
-                    }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Refresh,
-                        contentDescription = stringResource(id = R.string.icon_content_desc_refresh)
-                    )
-                    Text(stringResource(id = R.string.refresh))
-                }
+
 
                 LazyColumn(
                     modifier = Modifier
@@ -315,7 +300,6 @@ fun Home(
                 }
             }
 
-
             Spacer(modifier = Modifier.size(12.dp))
 
 
@@ -325,10 +309,7 @@ fun Home(
                             onClick = { navController.navigate("Timetables") },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                         ) {
-                            Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Timetables",
-                                modifier = Modifier
-                                .size(30.dp))
-                            Text(" Timetables")
+
                             Icon(
                                 imageVector = Icons.Outlined.DateRange,
                                 contentDescription = stringResource(id = R.string.icon_content_desc_timetables),
@@ -343,11 +324,6 @@ fun Home(
                             onClick = { navController.navigate("RouteFinder") },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
                         ) {
-                            Icon(imageVector = Icons.Outlined.Map, contentDescription = "Routes",
-                                modifier = Modifier
-                                    .size(30.dp))
-                            Text(" Routes")
-
                             Icon(
                                 imageVector = Icons.Outlined.Map,
                                 contentDescription = stringResource(id = R.string.icon_content_desc_routes),

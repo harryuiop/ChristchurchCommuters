@@ -26,8 +26,6 @@ class AddBusStopViewModel: ViewModel() {
     }
 
 
-
-
     var filteredBusStops by mutableStateOf(listOf<BusStop>())
         private set
 
