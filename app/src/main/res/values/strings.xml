@@ -5,7 +5,7 @@
     <string name="route_finder_title">Route Finder</string>
     <string name="search_placeholder_start_location">Choose start location</string>
     <string name="search_placeholder_destination">Choose destination</string>
-    <string name="button_submit_routes_request">Submit Icon</string>
+    <string name="button_submit_routes_request">Submit</string>
     <string name="no_routes_available">No routes available</string>
     <string name="icon_content_desc_transfer">Transfer</string>
     <string name="icon_content_desc_ellipsis">Ellipsis</string>
@@ -36,4 +36,26 @@
     <string name="weekday">Weekday</string>
     <string name="saturday">Saturday</string>
     <string name="sunday">Sunday</string>
+    <string name="stop_num">Stop #</string>
+
+    <!--Add Home screen-->
+    <string name="app_title">Bus App</string>
+    <string name="home_title">Christchurch Commuters</string>
+    <string name="your_stop">Your Stop:</string>
+    <string name="upcoming">Upcoming - Last updated</string>
+    <string name="icon_content_desc_refresh">Refresh</string>
+    <string name="refresh">Refresh</string>
+    <string name="due">Due</string>
+    <string name="scheduled_arrival">Scheduled Arrival:</string>
+    <string name="trip_scheduled">Running to schedule</string>
+    <string name="trip_added">Extra trip added</string>
+    <string name="trip_cancelled">Trip canceled</string>
+    <string name="add_bus_stop">Add Bus Stop</string>
+    <string name="change_bus_stop">Change Bus Stop</string>
+    <string name="icon_content_desc_timetables">Timetables</string>
+    <string name="button_text_timetables">Timetables</string>
+    <string name="icon_content_desc_routes">Routes</string>
+    <string name="button_text_routes">Routes</string>
+    <string name="not_available">N/A</string>
+    <string name="now">now</string>
 </resources>

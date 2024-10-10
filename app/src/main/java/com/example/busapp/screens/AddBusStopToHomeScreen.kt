@@ -1,11 +1,8 @@
 package com.example.busapp.screens
 
-import android.util.Log
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -70,7 +67,7 @@ fun AddBusStop(
                 ) {
                     OutlinedCard(
                         onClick = {
-                            addBusStopViewModel.updateSelectedBusStop(key.toInt(), value);
+                            addBusStopViewModel.updateSelectedBusStop(key.toInt(), value)
                             focusManager.clearFocus()
                         },
                         modifier = Modifier
@@ -79,7 +76,7 @@ fun AddBusStop(
 
                     ) {
                         Text(
-                            text = "Stop #$key",
+                            text = "${stringResource(id = R.string.stop_num)}$key",
                             modifier = Modifier
                                 .padding(8.dp),
                             style = typography.bodyLarge.copy(fontWeight = Bold)
