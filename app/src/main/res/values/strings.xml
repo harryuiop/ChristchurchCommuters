@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BusApp</string>
+    <string name="app_name">Christchurch Commuters</string>
 
     <!--Route Finder screen-->
     <string name="route_finder_title">Route Finder</string>
@@ -39,8 +39,7 @@
     <string name="stop_num">Stop #</string>
 
     <!--Add Home screen-->
-    <string name="app_title">Bus App</string>
-    <string name="home_title">Christchurch Commuters</string>
+    <string name="app_title">Christchurch Commuters</string>
     <string name="your_stop">Your Stop:</string>
     <string name="upcoming">Upcoming - Last updated</string>
     <string name="icon_content_desc_refresh">Refresh</string>

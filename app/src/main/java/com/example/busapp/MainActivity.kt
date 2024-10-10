@@ -214,7 +214,6 @@ fun Home(
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(id = R.string.home_title), fontSize = 24.sp)
 
             Spacer(modifier = Modifier.size(12.dp))
 
