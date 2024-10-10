@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">BusApp</string>
+
+    <!--Route Finder screen-->
+    <string name="route_finder_title">Route Finder</string>
+    <string name="search_placeholder_start_location">Choose start location</string>
+    <string name="search_placeholder_destination">Choose destination</string>
+    <string name="button_submit_routes_request">Submit Icon</string>
+    <string name="no_routes_available">No routes available</string>
+    <string name="icon_content_desc_transfer">Transfer</string>
+    <string name="icon_content_desc_ellipsis">Ellipsis</string>
+    <string name="icon_content_desc_expand_collapse">Expand/Collapse</string>
+    <string name="walk_to_stop">Walk to stop:</string>
+    <string name="take_the_bus_line">Take the bus line:</string>
+    <string name="the_bus_departs_at">The bus departs at:</string>
+    <string name="direction">Direction:</string>
+    <string name="exit_bus_at_stop">Exit bus at stop:</string>
+    <string name="the_bus_arrives_at">The bus arrives at:</string>
+    <string name="icon_content_desc_close">Close</string>
+    <string name="icon_content_desc_back">Back</string>
+    <string name="icon_content_desc_forward">Forward</string>
+    <string name="time_picker_title">Select Time &amp; Date</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 </resources>

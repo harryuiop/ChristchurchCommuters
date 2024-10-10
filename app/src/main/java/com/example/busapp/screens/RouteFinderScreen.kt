@@ -47,11 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.example.busapp.R
 import com.example.busapp.models.Leg
 import com.example.busapp.models.Route
 import com.example.busapp.models.TransitDetails
@@ -88,7 +90,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Route Finder", fontSize = 24.sp)
+        Text(text = stringResource(id = R.string.route_finder_title), fontSize = 24.sp)
 
         Spacer(modifier = Modifier.size(24.dp))
 
@@ -100,7 +102,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                     startPredictions = result
                 }
             },
-            placeholderText = "Choose start location",
+            placeholderText = stringResource(id = R.string.search_placeholder_start_location),
             onSelectPrediction = { routeFinderViewModel.updateStartLocation(it) }
         )
 
@@ -114,7 +116,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                     destinationPredictions = result
                 }
             },
-            placeholderText = "Choose destination",
+            placeholderText = stringResource(id = R.string.search_placeholder_destination),
             onSelectPrediction = { routeFinderViewModel.updateDestination(it) }
         )
 
@@ -143,7 +145,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Submit Icon",
+                    contentDescription = stringResource(id = R.string.button_submit_routes_request),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -158,7 +160,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 @Composable
 fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
     if (transitRoutesResponse.routes.isNullOrEmpty()) {
-        Text(text = "No routes available")
+        Text(text = stringResource(id = R.string.no_routes_available))
     } else {
         Column {
             transitRoutesResponse.routes.forEach() { route ->
@@ -214,7 +216,7 @@ fun RouteCard(route: Route) {
 
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Transfer"
+                                contentDescription = stringResource(id = R.string.icon_content_desc_transfer)
                             )
 
                             val stepsSize = leg.steps.filter { it.transitDetails != null }.size
@@ -223,12 +225,12 @@ fun RouteCard(route: Route) {
                             if (stepsSize > 2) {
                                 Icon(
                                     imageVector = Icons.Filled.MoreHoriz,
-                                    contentDescription = "Ellipsis"
+                                    contentDescription = stringResource(id = R.string.icon_content_desc_ellipsis)
                                 )
 
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = "Transfer"
+                                    contentDescription = stringResource(id = R.string.icon_content_desc_transfer)
                                 )
 
                             } else {
@@ -241,7 +243,7 @@ fun RouteCard(route: Route) {
 
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                            contentDescription = "Transfer"
+                                            contentDescription = stringResource(id = R.string.icon_content_desc_transfer)
                                         )
                                     }
                                 }
@@ -255,11 +257,13 @@ fun RouteCard(route: Route) {
                     }
 
                     Column(
-                        modifier = Modifier.align(Alignment.CenterVertically).padding(start = 6.dp)
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 6.dp)
                     ) {
                         Icon(
                             imageVector = icon,
-                            contentDescription = "Expand/Collapse",
+                            contentDescription = stringResource(id = R.string.icon_content_desc_expand_collapse),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -289,32 +293,32 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Walk to stop:", color = Color.Black)
+        Text(text = stringResource(id = R.string.walk_to_stop), color = Color.Black)
         Text(text = transitDetails.stopDetails.departureStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Take the bus line:", color = Color.Black)
+        Text(text = stringResource(id = R.string.take_the_bus_line), color = Color.Black)
         Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus departs at:", color = Color.Black)
+        Text(text = stringResource(id = R.string.the_bus_departs_at), color = Color.Black)
         Text(text = transitDetails.localizedValues.departureTime.time.text)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "Direction:", color = Color.Black)
+        Text(text = stringResource(id = R.string.direction), color = Color.Black)
         Text(text = transitDetails.headsign)
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = "Exit bus at stop:", color = Color.Black)
+        Text(text = stringResource(id = R.string.exit_bus_at_stop), color = Color.Black)
         Text(text = transitDetails.stopDetails.arrivalStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = "The bus arrives at:", color = Color.Black)
+        Text(text = stringResource(id = R.string.the_bus_arrives_at), color = Color.Black)
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
     }
 }
@@ -369,7 +373,7 @@ fun LocationSearchBar(
                         }
                     },
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Close Icon"
+                    contentDescription = stringResource(id = R.string.icon_content_desc_close)
                 )
             }
         }
@@ -451,7 +455,10 @@ fun AdvancedTimePicker(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(id = R.string.icon_content_desc_back)
+                )
             }
 
             Text(
@@ -468,7 +475,10 @@ fun AdvancedTimePicker(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward, 
+                    contentDescription = stringResource(id = R.string.icon_content_desc_forward)
+                )
             }
         }
 
@@ -478,7 +488,7 @@ fun AdvancedTimePicker(
 
 @Composable
 fun AdvancedTimePickerDialog(
-    title: String = "Select Time & Date",
+    title: String = stringResource(id = R.string.time_picker_title),
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     content: @Composable () -> Unit,
@@ -520,8 +530,8 @@ fun AdvancedTimePickerDialog(
                         .fillMaxWidth()
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
+                    TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.cancel)) }
+                    TextButton(onClick = onConfirm) { Text(stringResource(id = R.string.ok)) }
                 }
             }
         }
