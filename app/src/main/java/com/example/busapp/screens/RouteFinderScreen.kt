@@ -71,9 +71,7 @@ import java.util.Locale
 @Composable
 fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderViewModel) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
-    var transitRoutes by rememberSaveable { mutableStateOf(TransitRoutesResponse(emptyList())) }
-    var startPredictions by rememberSaveable { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
-    var destinationPredictions by rememberSaveable { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
 
     if (showDialog) {
         AdvancedTimePicker(
@@ -95,11 +93,14 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
         Spacer(modifier = Modifier.size(24.dp))
 
         LocationSearchBar(
-            onClearQuery = { routeFinderViewModel.updateStartLocation("") },
-            predictions = startPredictions,
+            onClearQuery = {
+                routeFinderViewModel.updateStartLocation("")
+                routeFinderViewModel.updateStartPredictions(emptyList())
+            },
+            predictions = routeFinderViewModel.startPredictions,
             onQueryChange = {
                 routeFinderViewModel.findAutocompletePredictions(it) { result ->
-                    startPredictions = result
+                    routeFinderViewModel.updateStartPredictions(result)
                 }
             },
             placeholderText = stringResource(id = R.string.search_placeholder_start_location),
@@ -109,11 +110,14 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
         Spacer(modifier = Modifier.size(12.dp))
 
         LocationSearchBar(
-            onClearQuery = { routeFinderViewModel.updateDestination("") },
-            predictions = destinationPredictions,
+            onClearQuery = {
+                routeFinderViewModel.updateDestination("")
+                routeFinderViewModel.updateDestinationPredictions(emptyList())
+            },
+            predictions = routeFinderViewModel.destinationPredictions,
             onQueryChange = {
                 routeFinderViewModel.findAutocompletePredictions(it) { result ->
-                    destinationPredictions = result
+                    routeFinderViewModel.updateDestinationPredictions(result)
                 }
             },
             placeholderText = stringResource(id = R.string.search_placeholder_destination),
@@ -128,8 +132,6 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val timeFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
-
             OutlinedButton(
                 onClick = { showDialog = true }
             ) {
@@ -139,7 +141,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             Button(
                 onClick = {
                     CoroutineScope(Dispatchers.IO).launch {
-                        transitRoutes = routeFinderViewModel.getRoutes()
+                        routeFinderViewModel.fetchRoutes()
                     }
                 }
             ) {
@@ -153,7 +155,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
 
         Spacer(modifier = Modifier.size(24.dp))
 
-        TransitRoutesView(transitRoutes)
+        TransitRoutesView(routeFinderViewModel.transitRoutes)
     }
 }
 
@@ -172,13 +174,18 @@ fun TransitRoutesView(transitRoutesResponse: TransitRoutesResponse) {
 
 @Composable
 fun RouteCard(route: Route) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
-
     // Ensure the route has transit details
     val hasTransitDetails = route.legs.any { leg ->
         leg.steps.any { step -> step.transitDetails != null }
     }
+
+    val leg = route.legs.first()
+    val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
+    val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
+    val stepsSize = leg.steps.filter { it.transitDetails != null }.size
+
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
 
     if (hasTransitDetails) {
         Card(
@@ -194,10 +201,6 @@ fun RouteCard(route: Route) {
             }
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                val leg = route.legs.first()
-                val firstStep = leg.steps.firstOrNull { it.transitDetails != null }
-                val lastStep = leg.steps.lastOrNull { it.transitDetails != null }
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -218,8 +221,6 @@ fun RouteCard(route: Route) {
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = stringResource(id = R.string.icon_content_desc_transfer)
                             )
-
-                            val stepsSize = leg.steps.filter { it.transitDetails != null }.size
 
                             // In-between steps (only show 2 at most)
                             if (stepsSize > 2) {
