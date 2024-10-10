@@ -54,8 +54,6 @@ class RoutesRepositoryImpl: RoutesRepository {
             outputStream.flush()
             outputStream.close()
 
-            println(transitRouteRequest)
-
             val status = connection.responseCode
             Log.i("RoutesAPI", "Response code: $status")
 
@@ -69,7 +67,7 @@ class RoutesRepositoryImpl: RoutesRepository {
             }
 
         } catch (e: Exception) {
-            Log.e("RoutesAPI", "Error: ${e.message}")
+            Log.e("RoutesAPI", "Error: $e")
             TransitRoutesResponse(emptyList())
         } finally {
             connection?.disconnect()
