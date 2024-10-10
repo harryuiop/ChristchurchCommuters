@@ -41,12 +41,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import com.example.busapp.R
 import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -106,7 +108,11 @@ fun ViewTimetables(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Timetables", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stringResource(id = R.string.timetables_title),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
                 Spacer(modifier = Modifier.size(20.dp))
                 
@@ -116,7 +122,7 @@ fun ViewTimetables(
                 ) {
                     TextField(
                         value = selectedRouteName,
-                        placeholder = { Text("Select Bus Service") },
+                        placeholder = { Text(stringResource(id = R.string.text_placeholder_select_bus)) },
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -263,7 +269,7 @@ fun ViewTimetables(
                         }
                     }
                 ) {
-                    Text("View Other Direction", fontSize = 12.sp)
+                    Text(stringResource(id = R.string.view_other_direction), fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.size(20.dp))
@@ -303,7 +309,7 @@ fun ViewTimetables(
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
-                            Text("Weekday")
+                            Text(stringResource(id = R.string.weekday))
                         }
                     }
                     if (saturdayVisible) {
@@ -337,7 +343,7 @@ fun ViewTimetables(
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
-                            Text("Saturday")
+                            Text(stringResource(id = R.string.saturday))
                         }
                     }
                     if (sundayVisible) {
@@ -371,7 +377,7 @@ fun ViewTimetables(
                                 ButtonColors(ButtonDefaults.buttonColors().containerColor, ButtonDefaults.buttonColors().contentColor, Color.Gray, Color.White)
                             }
                         ) {
-                            Text("Sunday")
+                            Text(stringResource(id = R.string.sunday))
                         }
                     }
                 }
