@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DockedSearchBar
@@ -136,13 +137,14 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
                     CoroutineScope(Dispatchers.IO).launch {
                         transitRoutes = routeFinderViewModel.getRoutes()
                     }
-                }
-            ) {
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFD0BCFF))
+                ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = stringResource(id = R.string.button_submit_routes_request),
@@ -293,32 +295,32 @@ fun StepView(transitDetails: TransitDetails) {
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = stringResource(id = R.string.walk_to_stop), color = Color.Black)
+        Text(text = stringResource(id = R.string.walk_to_stop), color = Color.Gray)
         Text(text = transitDetails.stopDetails.departureStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = stringResource(id = R.string.take_the_bus_line), color = Color.Black)
+        Text(text = stringResource(id = R.string.take_the_bus_line), color = Color.Gray)
         Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = stringResource(id = R.string.the_bus_departs_at), color = Color.Black)
+        Text(text = stringResource(id = R.string.the_bus_departs_at), color = Color.Gray)
         Text(text = transitDetails.localizedValues.departureTime.time.text)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = stringResource(id = R.string.direction), color = Color.Black)
+        Text(text = stringResource(id = R.string.direction), color = Color.Gray)
         Text(text = transitDetails.headsign)
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        Text(text = stringResource(id = R.string.exit_bus_at_stop), color = Color.Black)
+        Text(text = stringResource(id = R.string.exit_bus_at_stop), color = Color.Gray)
         Text(text = transitDetails.stopDetails.arrivalStop.name)
 
         Spacer(modifier = Modifier.size(6.dp))
 
-        Text(text = stringResource(id = R.string.the_bus_arrives_at), color = Color.Black)
+        Text(text = stringResource(id = R.string.the_bus_arrives_at), color = Color.Gray)
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
     }
 }
@@ -476,7 +478,7 @@ fun AdvancedTimePicker(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward, 
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = stringResource(id = R.string.icon_content_desc_forward)
                 )
             }

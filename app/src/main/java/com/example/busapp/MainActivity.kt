@@ -24,7 +24,6 @@ import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,8 +60,8 @@ import com.example.busapp.models.LiveBusViaStop
 import com.example.busapp.models.UserData
 import com.example.busapp.screens.AddBusStop
 import com.example.busapp.screens.ViewTimetables
-import com.example.busapp.services.MetroApiService
 import com.example.busapp.services.readMetroFiles
+import com.example.busapp.services.MetroApiService
 import com.example.busapp.ui.theme.BusAppTheme
 import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.example.busapp.viewmodels.GtfsRealTimeViewModel
@@ -76,6 +75,14 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.OutlinedButton
 import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
 
 
@@ -179,7 +186,7 @@ fun Home(
         tripUpdates = emptyList())) }
     refreshedData = feed
 
-    LaunchedEffect(users,tripUpdatesContainingStopId) {
+    LaunchedEffect(users) {
         if (users.isNotEmpty()) {
             isLoading = false
             userViewModel.getUserById(0)
@@ -200,6 +207,7 @@ fun Home(
             userViewModel.getUserById(0)
         }
 
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -212,10 +220,16 @@ fun Home(
 
             if (user!!.selectedStop.id != -1) {
                 Text(
-                    text = "${R.string.your_stop}\n#${user?.selectedStop?.id} ${user?.selectedStop?.stopName}",
+                    text = "${user?.selectedStop?.stopName} - ${user?.selectedStop?.id} ",
                     fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
                 )
+
+
+                Text("Updated ${convertDateToTime(refreshedData.lastUpdated)}")
+
+                Spacer(modifier = Modifier.size(12.dp))
                 Text(text = "${R.string.upcoming} ${convertDateToTime(refreshedData.lastUpdated)}", fontSize = 12.sp)
                 Button(
                     onClick = {
@@ -227,7 +241,7 @@ fun Home(
                         }
                     }) {
                     Icon(
-                        imageVector = Icons.Outlined.Refresh, 
+                        imageVector = Icons.Outlined.Refresh,
                         contentDescription = stringResource(id = R.string.icon_content_desc_refresh)
                     )
                     Text(stringResource(id = R.string.refresh))
@@ -262,7 +276,6 @@ fun Home(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.size(12.dp))
 
             } else {
                 LazyColumn(
@@ -273,23 +286,37 @@ fun Home(
                 ) {}
             }
 
+            Spacer(modifier = Modifier.size(12.dp))
 
             Row {
                 Button(
                     onClick = { navController.navigate("AddStop") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
                     modifier = Modifier
                 ) {
-                    Text(
-                        if (user!!.selectedStop.id == -1)
-                            stringResource(id = R.string.add_bus_stop)
-                        else
-                            stringResource(id = R.string.change_bus_stop)
-                    )
+                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Timetables",
+                        modifier = Modifier
+                            .size(30.dp))
+                    Text(if (user!!.selectedStop.id == -1) "Add Stop" else "Change Stop")
+                }
+
+                Button(
+                    onClick = {
+                        lifecycleScope.launch {
+                            val liveData: GtfsRealtimeFeed = metroApiService.getRealTimeData()
+                            Log.d("Home", "Fetched new data: ${liveData.tripUpdates.size} trip updates")
+                            gftsRealTimeViewModel.setData(liveData)
+                            refreshedData = liveData
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)) {
+                    Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Routes")
+                    Text(" Refresh")
                 }
             }
 
 
-            Spacer(modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
 
                 Row {
@@ -298,6 +325,10 @@ fun Home(
                             onClick = { navController.navigate("Timetables") },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)
                         ) {
+                            Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Timetables",
+                                modifier = Modifier
+                                .size(30.dp))
+                            Text(" Timetables")
                             Icon(
                                 imageVector = Icons.Outlined.DateRange,
                                 contentDescription = stringResource(id = R.string.icon_content_desc_timetables),
@@ -312,8 +343,13 @@ fun Home(
                             onClick = { navController.navigate("RouteFinder") },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
                         ) {
+                            Icon(imageVector = Icons.Outlined.Map, contentDescription = "Routes",
+                                modifier = Modifier
+                                    .size(30.dp))
+                            Text(" Routes")
+
                             Icon(
-                                imageVector = Icons.Outlined.Map, 
+                                imageVector = Icons.Outlined.Map,
                                 contentDescription = stringResource(id = R.string.icon_content_desc_routes),
                                 modifier = Modifier.size(30.dp)
                             )
@@ -321,8 +357,6 @@ fun Home(
                         }
                     }
                 }
-
-            Spacer(modifier = Modifier.size(12.dp))
         }
     }
 }
