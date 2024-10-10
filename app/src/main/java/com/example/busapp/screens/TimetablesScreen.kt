@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import com.example.busapp.viewmodels.TimetableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -420,10 +421,33 @@ fun ViewTimetables(
                                 .border(2.dp, Color.Black)
                                 .background(tableBackgroundColour)
                         ) {
-                            items(headerList) {
-                                Text(it, columnHeaderModifier, fontSize = 10.sp)
+                            items(headerList) { headerItem ->
+                                Text(
+                                    text = headerItem,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .border(1.dp, Color.Gray)
+                                        .background(Color(0xFFD0BCFF))
+                                        .padding(4.dp)
+                                        .size(50.dp),
+                                    fontSize = 10.sp,
+                                )
                             }
-                            items(dataList) { Text(it, dataModifier, fontSize = 10.sp) }
+                            items(dataList) { dataItem ->
+                                Text(
+                                    text = dataItem,
+                                    color = Color(0xFFCCC2DC),
+                                    modifier = Modifier
+                                        .border(1.dp, Color.Gray)
+                                        .background(Color(0xFF625b71))
+                                        .size(35.dp)
+                                        .wrapContentSize()
+                                        .padding(4.dp),
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }
