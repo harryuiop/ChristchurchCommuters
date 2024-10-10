@@ -366,7 +366,7 @@ fun arrivalIn(date: Date?): String {
     } else if (minutes.toInt() == 1) {
         String.format(" in %2d minute", minutes)
     } else {
-        " ${stringResource(id = R.string.now)}"
+        stringResource(id = R.string.now)
     }
 }
 
