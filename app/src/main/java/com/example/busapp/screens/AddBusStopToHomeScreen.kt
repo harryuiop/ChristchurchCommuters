@@ -5,9 +5,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ripple.rememberRipple
@@ -76,9 +78,7 @@ fun AddBusStop(
                 ) {
                     OutlinedCard(
                         onClick = {
-                            Log.d("BusStop", value);
                             addBusStopViewModel.updateSelectedBusStop(key.toInt(), value);
-                            Log.d("BusStop", addBusStopViewModel.selectedBusStop.toString());
                             focusManager.clearFocus()
                         },
                         modifier = Modifier
@@ -87,7 +87,7 @@ fun AddBusStop(
 
                     ) {
                         Text(
-                            text = key,
+                            text = "Stop #$key",
                             modifier = Modifier
                                 .padding(8.dp),
                             style = typography.bodyLarge.copy(fontWeight = Bold)
@@ -110,6 +110,9 @@ fun AddBusStop(
             ) {
                 Text(text = "Add to Home")
             }
+
+        Spacer(modifier = Modifier.size(12.dp))
+
 
     }
 
