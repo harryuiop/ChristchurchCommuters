@@ -51,13 +51,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
-
 import androidx.navigation.NavController
 import com.example.busapp.R
 import com.example.busapp.models.Leg
@@ -139,12 +137,17 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedButton(
+                onClick = {},
+                enabled = false,
+            ) {
+                Text(stringResource(id = R.string.button_depart_at))
+            }
+
+            OutlinedButton(
                 onClick = { showDialog = true }
             ) {
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
             }
-
-            Text(text = "Departure Time", Modifier.padding(0.dp,8.dp,0.dp,0.dp))
 
             OutlinedButton(
                 onClick = {
