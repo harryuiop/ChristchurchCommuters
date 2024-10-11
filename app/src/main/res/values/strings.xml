@@ -60,8 +60,16 @@
     <string name="now">now</string>
     <string name="in_minutes">in %2d minutes</string>
     <string name="in_minute">in %2d minute</string>
+    <string name="updated_last">Updated %1$s</string>
+    <string name="loading">Loading…</string>
+    <string name="add_stop">Add Stop</string>
+    <string name="change_stop">Change Stop</string>
 
     <!--Bus delay notifications-->
     <string name="channel_name">Bus Delays</string>
     <string name="channel_description">Bus delay notifications</string>
+    <string name="notification_due_minutes">Due in %d minutes</string>
+    <string name="notification_due_minute">Due in %d minute</string>
+    <string name="icon_content_desc_noti_on">Notifications enabled</string>
+    <string name="icon_content_desc_noti_off">Notifications disabled</string>
 </resources>

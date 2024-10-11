@@ -202,12 +202,22 @@ fun BusUpdateNotificationButton(
 
             // Notify at 5 minutes and 1 minute
             if (minutes == 5 && !notificationState.hasFiveMinNotified) {
-                showNotification(context, title, "Due in ${minutes.toString()} minutes", id)
+                showNotification(
+                    context,
+                    title,
+                    context.getString(R.string.notification_due_minutes, minutes),
+                    id
+                )
                 notificationState.hasFiveMinNotified = true
             }
 
             if (minutes == 1 && !notificationState.hasOneMinNotified) {
-                showNotification(context, title, "Due in ${minutes.toString()} minute", id)
+                showNotification(
+                    context,
+                    title,
+                    context.getString(R.string.notification_due_minute, minutes),
+                    id
+                )
                 notificationState.hasOneMinNotified = true
             }
 
@@ -224,7 +234,11 @@ fun BusUpdateNotificationButton(
     ) {
         Icon(
             imageVector = currentIcon,
-            contentDescription = if (notificationState.isNotificationEnabled) "Notifications enabled" else "Notifications disabled"
+            contentDescription =
+            if (notificationState.isNotificationEnabled)
+                stringResource(id = R.string.icon_content_desc_noti_on)
+            else
+                stringResource(id = R.string.icon_content_desc_noti_off)
         )
     }
 }
@@ -332,8 +346,9 @@ fun Home(
                     fontWeight = FontWeight.Bold
                 )
 
-
-                Text("Updated ${convertDateToTime(refreshedData.lastUpdated)}")
+                Text(
+                    context.getString(R.string.updated_last, convertDateToTime(refreshedData.lastUpdated))
+                )
 
                 Spacer(modifier = Modifier.size(12.dp))
 
@@ -369,7 +384,7 @@ fun Home(
                                         if (first != null)
                                             "$second $first"
                                         else
-                                            "Loading...",
+                                            stringResource(id = R.string.loading),
                                         fontWeight = FontWeight.Bold, fontSize = 20.sp
                                     )
 
@@ -415,7 +430,12 @@ fun Home(
                     Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Timetables",
                         modifier = Modifier
                             .size(30.dp))
-                    Text(if (user!!.selectedStop.id == -1) "Add Stop" else "Change Stop")
+                    Text(
+                        if (user!!.selectedStop.id == -1)
+                            stringResource(id = R.string.add_stop)
+                        else
+                            stringResource(id = R.string.change_stop)
+                    )
                 }
 
                 Button(
@@ -428,8 +448,11 @@ fun Home(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White)) {
-                    Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "Routes")
-                    Text(" Refresh")
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh, 
+                        contentDescription = stringResource(id = R.string.icon_content_desc_routes)
+                    )
+                    Text(stringResource(id = R.string.refresh))
                 }
             }
 
