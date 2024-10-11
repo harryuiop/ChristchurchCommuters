@@ -3,6 +3,7 @@ import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -51,11 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
+
 import androidx.navigation.NavController
 import com.example.busapp.R
 import com.example.busapp.models.Leg
@@ -128,7 +132,17 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             onSelectPrediction = { routeFinderViewModel.updateDestination(it) }
         )
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Departure Time",
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+                textAlign = TextAlign.Start
+            )
+        }
 
         Row(
             modifier = Modifier
@@ -136,13 +150,6 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(
-                onClick = {},
-                enabled = false,
-            ) {
-                Text(stringResource(id = R.string.button_depart_at))
-            }
-
             OutlinedButton(
                 onClick = { showDialog = true }
             ) {
