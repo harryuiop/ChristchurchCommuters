@@ -59,4 +59,8 @@
     <string name="now">now</string>
     <string name="in_minutes">in %2d minutes</string>
     <string name="in_minute">in %2d minute</string>
+
+    <!--Bus delay notifications-->
+    <string name="channel_name">Bus Delays</string>
+    <string name="channel_description">Bus delay notifications</string>
 </resources>

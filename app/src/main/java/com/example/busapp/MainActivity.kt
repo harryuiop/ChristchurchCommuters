@@ -2,11 +2,17 @@ package com.example.busapp
 
 import RouteFinder
 import android.annotation.SuppressLint
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +26,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,15 +49,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -60,8 +73,8 @@ import com.example.busapp.models.LiveBusViaStop
 import com.example.busapp.models.UserData
 import com.example.busapp.screens.AddBusStop
 import com.example.busapp.screens.ViewTimetables
-import com.example.busapp.services.readMetroFiles
 import com.example.busapp.services.MetroApiService
+import com.example.busapp.services.readMetroFiles
 import com.example.busapp.ui.theme.BusAppTheme
 import com.example.busapp.viewmodels.AddBusStopViewModel
 import com.example.busapp.viewmodels.GtfsRealTimeViewModel
@@ -70,19 +83,12 @@ import com.example.busapp.viewmodels.TimetableViewModel
 import com.example.busapp.viewmodels.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.OutlinedButton
 import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
 
 
@@ -162,6 +168,92 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun BusUpdateNotificationButton(
+    context: Context,
+    title: String,
+    tripUpdate: LiveBusViaStop,
+) {
+    var isNotificationEnabled by rememberSaveable { mutableStateOf(false) }
+    var hasFiveMinNotified by rememberSaveable { mutableStateOf(false) }
+    var hasOneMinNotified by rememberSaveable { mutableStateOf(false) }
+
+    val currentIcon = if (isNotificationEnabled) {
+        Icons.Default.NotificationsActive
+    } else {
+        Icons.Default.NotificationsNone
+    }
+
+    LaunchedEffect(isNotificationEnabled) {
+        while (isNotificationEnabled) {
+            val now = Date()
+            val differenceInMillis = tripUpdate.arrivalTime.time - now.time
+            val differenceInSeconds = differenceInMillis / 1000
+            val minutes = (differenceInSeconds / 60).toInt()
+
+            if (minutes == 5 && !hasFiveMinNotified) {
+                showNotification(context, title, "Due in ${minutes.toString()} minutes")
+                hasFiveMinNotified = true
+            }
+
+            if (minutes == 1 && !hasOneMinNotified) {
+                showNotification(context, title, "Due in ${minutes.toString()} minute")
+                hasOneMinNotified = true
+            }
+
+            // Check every 30 seconds
+            delay(30000)
+        }
+    }
+
+    IconButton(
+        onClick = {
+            isNotificationEnabled = !isNotificationEnabled // Toggle the state
+        }
+    ) {
+        Icon(
+            imageVector = currentIcon,
+            contentDescription = if (isNotificationEnabled) "Notifications enabled" else "Notifications disabled"
+        )
+    }
+}
+
+private fun showNotification(
+    context: Context,
+    title: String,
+    content: String
+) {
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    val notificationBuilder =
+        NotificationCompat.Builder(context, "bus_delays_channel")
+            .setSmallIcon(R.drawable.bus)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+
+    notificationManager.notify(666, notificationBuilder.build())
+}
+
+@Composable
+fun NotificationPermRequest() {
+    var hasNotificationPermission by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { hasNotificationPermission = it }
+    )
+
+    if (!hasNotificationPermission) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            LaunchedEffect(Unit) {
+                permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+}
+
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun Home(
@@ -174,7 +266,7 @@ fun Home(
     userViewModel: UserViewModel
 ) {
     val feed by gftsRealTimeViewModel.feed.collectAsState()
-
+    val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
 
     userViewModel.getAllUsers()
@@ -194,6 +286,8 @@ fun Home(
             userViewModel.addUser(UserData(0, BusStop(-1, "")))
         }
     }
+
+    NotificationPermRequest()
 
     if(isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -245,9 +339,28 @@ fun Home(
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text("${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second} " +
-                                        "${timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.first}",
-                                    fontWeight = FontWeight.Bold, fontSize = 20.sp )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val first = timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.first
+                                    val second = timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second
+
+                                    Text(
+                                        "$second $first",
+                                        fontWeight = FontWeight.Bold, fontSize = 20.sp
+                                    )
+
+                                    BusUpdateNotificationButton(
+                                        context = context,
+                                        title = "$second $first",
+                                        tripUpdate = tripUpdate,
+                                    )
+                                }
+
                                 Text("${stringResource(id = R.string.due)} ${arrivalIn(tripUpdate.arrivalTime)}")
                                 Text("${stringResource(id = R.string.direction)} ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
                                 Text("${stringResource(id = R.string.scheduled_arrival)} ${convertDateToTime(tripUpdate.arrivalTime)}")
@@ -363,9 +476,9 @@ fun arrivalIn(date: Date?): String {
     val minutes = ((differenceInSeconds % 3600) / 60)
 
     return if (minutes > 0) {
-        String.format(" in %2d minutes", minutes)
+        String.format(stringResource(id = R.string.in_minutes), minutes)
     } else if (minutes.toInt() == 1) {
-        String.format(" in %2d minute", minutes)
+        String.format(stringResource(id = R.string.in_minute), minutes)
     } else {
         stringResource(id = R.string.now)
     }
