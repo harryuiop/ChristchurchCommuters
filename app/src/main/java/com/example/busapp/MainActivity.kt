@@ -375,12 +375,8 @@ fun Home(
                 }
 
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                ) {}
+                Text(text = "Please select a bus stop!", fontWeight = FontWeight.Bold, fontSize = 25.sp)
+                Spacer(modifier = Modifier.size(20.dp))
             }
 
             Spacer(modifier = Modifier.size(12.dp))
