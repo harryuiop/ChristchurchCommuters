@@ -64,6 +64,7 @@
     <string name="loading">Loading…</string>
     <string name="add_stop">Add Stop</string>
     <string name="change_stop">Change Stop</string>
+    <string name="please_select_stop">Please select a bus stop!</string>
 
     <!--Bus delay notifications-->
     <string name="channel_name">Bus Delays</string>

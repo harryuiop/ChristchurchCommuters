@@ -411,7 +411,11 @@ fun Home(
                 }
 
             } else {
-                Text(text = "Please select a bus stop!", fontWeight = FontWeight.Bold, fontSize = 25.sp)
+                Text(
+                    text = stringResource(id = R.string.please_select_stop),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp
+                )
                 Spacer(modifier = Modifier.size(20.dp))
             }
 
@@ -423,9 +427,12 @@ fun Home(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
                     modifier = Modifier
                 ) {
-                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Timetables",
+                    Icon(
+                        imageVector = Icons.Outlined.Settings, 
+                        contentDescription = stringResource(id = R.string.icon_content_desc_timetables),
                         modifier = Modifier
-                            .size(30.dp))
+                            .size(30.dp)
+                    )
                     Text(
                         if (user!!.selectedStop.id == -1)
                             stringResource(id = R.string.add_stop)
