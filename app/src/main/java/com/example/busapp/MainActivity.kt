@@ -383,7 +383,7 @@ fun Home(
                                 }
 
                                 Text("${stringResource(id = R.string.due)} ${arrivalIn(tripUpdate.arrivalTime)}")
-                                Text("${stringResource(id = R.string.direction)} ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId]}")
+                                Text("${stringResource(id = R.string.direction)} ${timetableViewModel.tripIdToHeadboard.value[tripUpdate.tripId] ?: "Loading..."}")
                                 Text("${stringResource(id = R.string.scheduled_arrival)} ${convertDateToTime(tripUpdate.arrivalTime)}")
                                 when (tripUpdate.scheduleRelationship) {
                                     "SCHEDULED" -> Text(stringResource(id = R.string.trip_scheduled))
