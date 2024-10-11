@@ -23,7 +23,7 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="share_route">Share Route</string>
-    <string name="button_depart_at">Depart at</string>
+    <string name="button_depart_at">Departure Time</string>
 
     <!--Add Bus Stop screen-->
     <string name="metro_bus_stops_title">Metro Bus Stops</string>

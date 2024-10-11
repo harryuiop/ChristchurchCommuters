@@ -52,14 +52,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
-
 import androidx.navigation.NavController
 import com.example.busapp.R
 import com.example.busapp.models.Leg
@@ -136,7 +134,7 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Departure Time",
+                text = stringResource(id = R.string.button_depart_at),
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
