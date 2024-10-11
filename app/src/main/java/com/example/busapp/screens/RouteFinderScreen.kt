@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -142,6 +143,8 @@ fun RouteFinder(navController: NavController, routeFinderViewModel: RouteFinderV
             ) {
                 Text(timeFormat.format(routeFinderViewModel.calendar.time))
             }
+
+            Text(text = "Departure Time", Modifier.padding(0.dp,8.dp,0.dp,0.dp))
 
             OutlinedButton(
                 onClick = {
