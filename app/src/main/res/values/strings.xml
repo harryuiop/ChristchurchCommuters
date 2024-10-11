@@ -59,8 +59,8 @@
     <string name="button_text_routes">Routes</string>
     <string name="not_available">N/A</string>
     <string name="now">now</string>
-    <string name="in_minutes">in %2d minutes</string>
-    <string name="in_minute">in %2d minute</string>
+    <string name="in_minutes">in %d minutes</string>
+    <string name="in_minute">in %1d minute</string>
     <string name="updated_last">Updated %1$s</string>
     <string name="loading">Loading…</string>
     <string name="add_stop">Add Stop</string>

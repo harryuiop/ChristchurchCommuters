@@ -522,10 +522,10 @@ fun arrivalIn(date: Date?): String {
 
     val minutes = ((differenceInSeconds % 3600) / 60)
 
-    return if (minutes > 0) {
-        String.format(stringResource(id = R.string.in_minutes), minutes)
-    } else if (minutes.toInt() == 1) {
+    return if (minutes.toInt() == 1) {
         String.format(stringResource(id = R.string.in_minute), minutes)
+    } else if (minutes > 0) {
+        String.format(stringResource(id = R.string.in_minutes), minutes)
     } else {
         stringResource(id = R.string.now)
     }
