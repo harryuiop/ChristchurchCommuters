@@ -1,3 +1,4 @@
+import android.content.Intent
 import android.graphics.Color.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,11 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat.startActivity
+
 import androidx.navigation.NavController
 import com.example.busapp.R
 import com.example.busapp.models.Leg
@@ -282,48 +286,78 @@ fun RouteCard(route: Route) {
 
 @Composable
 fun LegView(leg: Leg) {
+    val context = LocalContext.current
+    var shareRouteText = ""
     leg.steps.forEach { step ->
         step.transitDetails?.let { transitDetails ->
-            StepView(transitDetails)
+            val newShareRouteText = stepView(transitDetails)
+            shareRouteText += newShareRouteText
         }
+    }
+    Button(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+        val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareRouteText.trim())
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, null)
+        startActivity(context, shareIntent, null)
+    }) {
+        Text(text = stringResource(id = R.string.share_route))
     }
 }
 
 @Composable
-fun StepView(transitDetails: TransitDetails) {
+fun stepView(transitDetails: TransitDetails): String {
+    var currentShareRouteText = ""
     Column(modifier = Modifier.padding(6.dp)) {
         HorizontalDivider(modifier = Modifier.padding(3.dp), thickness = 2.dp, color = Color.White)
 
         Spacer(modifier = Modifier.size(6.dp))
 
         Text(text = stringResource(id = R.string.walk_to_stop), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.walk_to_stop) + " ")
         Text(text = transitDetails.stopDetails.departureStop.name)
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.stopDetails.departureStop.name + "\n")
 
         Spacer(modifier = Modifier.size(6.dp))
 
         Text(text = stringResource(id = R.string.take_the_bus_line), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.take_the_bus_line) + " ")
         Text(text = transitDetails.transitLine.name, color = Color(parseColor(transitDetails.transitLine.color)))
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.transitLine.name + "\n")
 
         Spacer(modifier = Modifier.size(6.dp))
 
         Text(text = stringResource(id = R.string.the_bus_departs_at), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.the_bus_departs_at) + " ")
         Text(text = transitDetails.localizedValues.departureTime.time.text)
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.localizedValues.departureTime.time.text + "\n")
 
         Spacer(modifier = Modifier.size(6.dp))
 
         Text(text = stringResource(id = R.string.direction), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.direction) + " ")
         Text(text = transitDetails.headsign)
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.headsign + "\n")
 
         Spacer(modifier = Modifier.size(12.dp))
 
         Text(text = stringResource(id = R.string.exit_bus_at_stop), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.exit_bus_at_stop) + " ")
         Text(text = transitDetails.stopDetails.arrivalStop.name)
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.stopDetails.arrivalStop.name + "\n")
 
         Spacer(modifier = Modifier.size(6.dp))
 
         Text(text = stringResource(id = R.string.the_bus_arrives_at), color = Color.Gray)
+        currentShareRouteText = currentShareRouteText.plus(stringResource(id = R.string.the_bus_arrives_at) + " ")
         Text(text = transitDetails.localizedValues.arrivalTime.time.text)
+        currentShareRouteText = currentShareRouteText.plus(transitDetails.localizedValues.arrivalTime.time.text + "\n" + "\n")
     }
+    return currentShareRouteText
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
