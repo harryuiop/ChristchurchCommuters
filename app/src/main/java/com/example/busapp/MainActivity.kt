@@ -366,7 +366,10 @@ fun Home(
                                     val second = timetableViewModel.tripIdToNameNumber.value[timetableViewModel.tripIdToRouteId.value[tripUpdate.tripId]]?.second
 
                                     Text(
-                                        if (first != null) first + second else "Loading...",
+                                        if (first != null)
+                                            "$second $first"
+                                        else
+                                            "Loading...",
                                         fontWeight = FontWeight.Bold, fontSize = 20.sp
                                     )
 
@@ -375,7 +378,7 @@ fun Home(
                                         title = "$second $first",
                                         tripUpdate = tripUpdate,
                                         notificationState = notificationState,
-                                        id = tripId.toInt()?: 0
+                                        id = tripId.toInt()
                                     )
                                 }
 
