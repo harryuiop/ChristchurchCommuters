@@ -67,6 +67,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.busapp.models.BusNotificationState
 import com.example.busapp.models.BusStop
 import com.example.busapp.models.GtfsRealtimeFeed
 import com.example.busapp.models.LiveBusViaStop
@@ -173,32 +174,41 @@ fun BusUpdateNotificationButton(
     context: Context,
     title: String,
     tripUpdate: LiveBusViaStop,
+    notificationState: BusNotificationState,
+    id: Int
 ) {
-    var isNotificationEnabled by rememberSaveable { mutableStateOf(false) }
-    var hasFiveMinNotified by rememberSaveable { mutableStateOf(false) }
-    var hasOneMinNotified by rememberSaveable { mutableStateOf(false) }
-
-    val currentIcon = if (isNotificationEnabled) {
+    val currentIcon = if (notificationState.isNotificationEnabled) {
         Icons.Default.NotificationsActive
     } else {
         Icons.Default.NotificationsNone
     }
 
-    LaunchedEffect(isNotificationEnabled) {
-        while (isNotificationEnabled) {
+    // Check if bus has left
+    LaunchedEffect(tripUpdate) {
+        if (!tripUpdate.arrivalTime.after(Date())) {
+            notificationState.isNotificationEnabled = false
+            notificationState.hasFiveMinNotified = false
+            notificationState.hasOneMinNotified = false
+        }
+    }
+
+    // Check for notifications
+    LaunchedEffect(notificationState.isNotificationEnabled) {
+        while (notificationState.isNotificationEnabled) {
             val now = Date()
             val differenceInMillis = tripUpdate.arrivalTime.time - now.time
             val differenceInSeconds = differenceInMillis / 1000
             val minutes = (differenceInSeconds / 60).toInt()
 
-            if (minutes == 5 && !hasFiveMinNotified) {
-                showNotification(context, title, "Due in ${minutes.toString()} minutes")
-                hasFiveMinNotified = true
+            // Notify at 5 minutes and 1 minute
+            if (minutes == 5 && !notificationState.hasFiveMinNotified) {
+                showNotification(context, title, "Due in ${minutes.toString()} minutes", id)
+                notificationState.hasFiveMinNotified = true
             }
 
-            if (minutes == 1 && !hasOneMinNotified) {
-                showNotification(context, title, "Due in ${minutes.toString()} minute")
-                hasOneMinNotified = true
+            if (minutes == 1 && !notificationState.hasOneMinNotified) {
+                showNotification(context, title, "Due in ${minutes.toString()} minute", id)
+                notificationState.hasOneMinNotified = true
             }
 
             // Check every 30 seconds
@@ -206,14 +216,15 @@ fun BusUpdateNotificationButton(
         }
     }
 
+    // Button to toggle notifications
     IconButton(
         onClick = {
-            isNotificationEnabled = !isNotificationEnabled // Toggle the state
+            notificationState.isNotificationEnabled = !notificationState.isNotificationEnabled // Toggle the state
         }
     ) {
         Icon(
             imageVector = currentIcon,
-            contentDescription = if (isNotificationEnabled) "Notifications enabled" else "Notifications disabled"
+            contentDescription = if (notificationState.isNotificationEnabled) "Notifications enabled" else "Notifications disabled"
         )
     }
 }
@@ -221,7 +232,8 @@ fun BusUpdateNotificationButton(
 private fun showNotification(
     context: Context,
     title: String,
-    content: String
+    content: String,
+    id: Int = 0
 ) {
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -233,12 +245,12 @@ private fun showNotification(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
 
-    notificationManager.notify(666, notificationBuilder.build())
+    notificationManager.notify(id, notificationBuilder.build())
 }
 
 @Composable
 fun NotificationPermRequest() {
-    var hasNotificationPermission by remember { mutableStateOf(false) }
+    var hasNotificationPermission by rememberSaveable { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -268,6 +280,7 @@ fun Home(
     val feed by gftsRealTimeViewModel.feed.collectAsState()
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
+    val busNotificationStates = rememberSaveable { mutableMapOf<String, BusNotificationState>() }
 
     userViewModel.getAllUsers()
     val users by userViewModel.users.collectAsState(emptyList())
@@ -332,6 +345,9 @@ fun Home(
                         .fillMaxHeight()
                 ) {
                     items(tripUpdatesContainingStopId) { tripUpdate ->
+                        val tripId = tripUpdate.tripId
+                        val notificationState = busNotificationStates.getOrPut(tripId) { BusNotificationState() }
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -358,6 +374,8 @@ fun Home(
                                         context = context,
                                         title = "$second $first",
                                         tripUpdate = tripUpdate,
+                                        notificationState = notificationState,
+                                        id = tripId.toInt()?: 0
                                     )
                                 }
 
