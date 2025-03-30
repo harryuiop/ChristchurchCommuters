@@ -1,4 +1,4 @@
-# Christchurch Metro Navigator
+# Christchurch Commuters
 
 ## Overview
 Christchurch Metro Navigator is an Android application built with Kotlin and Jetpack Compose to help residents and visitors of Christchurch locate, plan, view, and interact with the Christchurch metro system. The app provides real-time transit updates and route planning for a seamless commuting experience.
